@@ -44,15 +44,22 @@ class QuoteCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // 左边 15% 显示作者名
+              // 左边 15% 显示作者名，竖排显示
               Expanded(
                 flex: 15,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    quote.poetName,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center, // 竖直居中
+                    crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
+                    children: quote.poetName.split('').map((char) {
+                      return Text(
+                        char,
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.normal),
+                        textAlign: TextAlign.center, // 每个字符居中对齐
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
@@ -94,12 +101,19 @@ class QuoteCard extends StatelessWidget {
               // 右边 15% 显示诗名
               Expanded(
                 flex: 15,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    quote.poetryName,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center, // 竖直居中
+                    crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
+                    children: quote.poetryName.split('').map((char) {
+                      return Text(
+                        char,
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.normal),
+                        textAlign: TextAlign.center, // 每个字符居中对齐
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
