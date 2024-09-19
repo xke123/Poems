@@ -38,19 +38,9 @@ class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
           } else if (snapshot.hasError) {
             return Center(child: Text('加载失败，请重试！'));
           } else if (snapshot.hasData) {
-            return Stack(
-              children: [
-                QuoteCard(quote: snapshot.data!),
-                Positioned(
-                  right: 20,
-                  bottom: 20,
-                  child: CupertinoButton(
-                    onPressed: _refreshQuote, // 刷新按钮点击事件
-                    color: CupertinoColors.activeBlue,
-                    child: Icon(CupertinoIcons.refresh),
-                  ),
-                ),
-              ],
+            return QuoteCard(
+              quote: snapshot.data!,
+              onRefresh: _refreshQuote, // 传递刷新回调
             );
           } else {
             return Center(child: Text('没有找到数据'));

@@ -53,3 +53,12 @@ macos/Flutter/Flutter-Release.xcconfig
 *.xcconfig
 macos/Flutter/Flutter-Debug.xcconfig
 macos/Flutter/Flutter-Debug.xcconfig
+macos/Runner.xcworkspace/contents.xcworkspacedata
+macos/Runner.xcodeproj/project.pbxproj
+macos/Flutter/Flutter-Release.xcconfig
+macos/Flutter/Flutter-Debug.xcconfig
+ios/Runner/Info.plist
+ios/Runner.xcworkspace/contents.xcworkspacedata
+ios/Runner.xcodeproj/project.pbxproj
+ios/Flutter/Release.xcconfig
+ios/Flutter/Debug.xcconfig

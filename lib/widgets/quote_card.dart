@@ -1,10 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/quote_model.dart';
 
 class QuoteCard extends StatelessWidget {
   final QuoteModel quote;
+  final VoidCallback onRefresh; // 添加 onRefresh 参数
 
-  QuoteCard({required this.quote});
+  QuoteCard({required this.quote, required this.onRefresh});
 
   // 删除所有符号并根据符号换行的方法
   String formatContent(String content) {
@@ -114,6 +116,26 @@ class QuoteCard extends StatelessWidget {
                         textAlign: TextAlign.center, // 每个字符居中对齐
                       );
                     }).toList(),
+                  ),
+                ),
+              ),
+              // 按钮，放在右下角，带有白色背景和阴影
+              Positioned(
+                right: 10, // 右边距
+                bottom: 10, // 底部边距
+                child: Material(
+                  elevation: 5, // 使按钮悬浮在Z轴上
+                  child: InkWell(
+                    onTap: onRefresh, // 调用传入的刷新方法
+                    borderRadius: BorderRadius.circular(30), // 确保点击区域是圆形
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0), // 内边距
+                      child: Icon(
+                        CupertinoIcons.refresh, // 刷新图标
+                        size: 24, // 图标大小
+                        color: Colors.black, // 图标颜色
+                      ),
+                    ),
                   ),
                 ),
               ),
