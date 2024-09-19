@@ -8,9 +8,11 @@ class QuoteCard extends StatelessWidget {
 
   // 删除所有符号并根据符号换行的方法
   String formatContent(String content) {
-    // 根据标点符号（如逗号、句号等）进行换行
-    String formattedContent = content.replaceAll(RegExp(r'[，。！？；]'), '\n');
-
+    // 根据标点符号（如逗号、句号等）进行换行，并删除符号
+    String formattedContent = content.replaceAllMapped(
+      RegExp(r'[，。！？；]'),
+      (Match match) => '\n', // 替换为换行符
+    );
     return formattedContent;
   }
 
@@ -57,13 +59,35 @@ class QuoteCard extends StatelessWidget {
               // 中间 70% 显示内容，处理符号并从右向左换行
               Expanded(
                 flex: 70,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    formatContent(quote.content), // 调用处理后的内容
-                    style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                    textAlign: TextAlign.right, // 从右到左对齐
-                    overflow: TextOverflow.visible,
+                child: Center(
+                  // 使用 Center 确保整体内容在页面中居中
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min, // Row 根据内容宽度自适应
+                    mainAxisAlignment: MainAxisAlignment.center, // 水平居中
+                    crossAxisAlignment: CrossAxisAlignment.center, // 垂直居中
+                    children: formatContent(quote.content)
+                        .split('\n')
+                        .reversed
+                        .map((line) {
+                      // 从右到左显示
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min, // Column 根据内容高度自适应
+                          mainAxisAlignment: MainAxisAlignment.center, // 垂直居中
+                          crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
+                          children: line.split('').map((char) {
+                            return Text(
+                              char,
+                              style: TextStyle(
+                                fontSize: 18,
+                              ),
+                              textAlign: TextAlign.center, // 每个字符居中显示
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ),
               ),
