@@ -7,14 +7,12 @@ class QuoteCard extends StatelessWidget {
   QuoteCard({required this.quote});
 
   // 删除所有符号并根据符号换行的方法
-    String formatContent(String content) {
-      // 根据标点符号（如逗号、句号等）进行换行
-      String formattedContent = content.replaceAll(RegExp(r'[，。！？；]'), '\n');
+  String formatContent(String content) {
+    // 根据标点符号（如逗号、句号等）进行换行
+    String formattedContent = content.replaceAll(RegExp(r'[，。！？；]'), '\n');
 
-      return formattedContent;
-    }
-
-
+    return formattedContent;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +23,20 @@ class QuoteCard extends StatelessWidget {
           height: MediaQuery.of(context).size.height * 0.618,
           width: MediaQuery.of(context).size.width * 0.8,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white, // 卡片背景颜色
             borderRadius: BorderRadius.circular(16.0),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.8),  // 调整阴影颜色的透明度
-                spreadRadius: 20,  // 扩展阴影范围
-                blurRadius: 20,   // 增大模糊效果，使阴影更柔和
-                offset: Offset(0, 10), // 增大垂直方向的偏移值，使阴影看起来更立体
+                color: Colors.black.withOpacity(0.8), // 阴影颜色，增加透明度
+                spreadRadius: 20, // 扩展范围，值越大阴影越大
+                blurRadius: 15, // 模糊程度，值越大阴影越柔和
+                offset: Offset(0, 10), // Y轴偏移，使阴影下沉，让卡片看起来像凸出来
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3), // 辅助的更浅阴影
+                spreadRadius: 10,
+                blurRadius: 10,
+                offset: Offset(0, 5), // 更小的偏移，增加层次感
               ),
             ],
           ),
@@ -56,9 +60,9 @@ class QuoteCard extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    formatContent(quote.content),  // 调用处理后的内容
+                    formatContent(quote.content), // 调用处理后的内容
                     style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
-                    textAlign: TextAlign.right,  // 从右到左对齐
+                    textAlign: TextAlign.right, // 从右到左对齐
                     overflow: TextOverflow.visible,
                   ),
                 ),

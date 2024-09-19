@@ -43,3 +43,13 @@ ios/Runner/GoogleService-Info.plist
 *.swp
 *.DS_Store
 assets/database/poems.db
+/macos
+/ios
+/ios
+ios/Flutter/Debug.xcconfig
+/ios
+/macos/Flutter
+macos/Flutter/Flutter-Release.xcconfig
+*.xcconfig
+macos/Flutter/Flutter-Debug.xcconfig
+macos/Flutter/Flutter-Debug.xcconfig
