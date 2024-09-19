@@ -1,0 +1,45 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+build/
+android/.gradle/
+android/app/build/
+ios/Pods/
+macos/Pods/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+web/.dart_tool/
+web/.dart_tools/
+web/build/
+
+# IntelliJ related
+.idea/
+*.iml
+
+# VS Code related
+.vscode/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Firebase related
+android/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Flutter Generated Files
+*.flutter-plugins
+*.flutter-plugins-dependencies
+*.flutter-plugins-dw
+*.flutter-packages
+.pub-cache/
+.pdm-cache/
+
+# Others
+*.log
+*.lock
+*.swp
+*.DS_Store
+assets/database/poems.db
