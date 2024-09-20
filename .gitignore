@@ -62,3 +62,8 @@ ios/Runner.xcworkspace/contents.xcworkspacedata
 ios/Runner.xcodeproj/project.pbxproj
 ios/Flutter/Release.xcconfig
 ios/Flutter/Debug.xcconfig
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Debug.xcconfig
+ios/Flutter/Release.xcconfig
+/ios
+/macos

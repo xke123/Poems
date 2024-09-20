@@ -4,7 +4,7 @@ import '../models/quote_model.dart';
 
 class QuoteCard extends StatelessWidget {
   final QuoteModel quote;
-  final VoidCallback onRefresh; // 添加 onRefresh 参数
+  final VoidCallback onRefresh;
 
   QuoteCard({required this.quote, required this.onRefresh});
 
@@ -34,7 +34,7 @@ class QuoteCard extends StatelessWidget {
                 color: Colors.black.withOpacity(0.8), // 阴影颜色，增加透明度
                 spreadRadius: 20, // 扩展范围，值越大阴影越大
                 blurRadius: 15, // 模糊程度，值越大阴影越柔和
-                offset: Offset(0, 10), // Y轴偏移，使阴影下沉，让卡片看起来像凸出来
+                offset: Offset(0, 10), // Y轴偏移，使阴影下沉
               ),
               BoxShadow(
                 color: Colors.black.withOpacity(0.3), // 辅助的更浅阴影
@@ -44,96 +44,105 @@ class QuoteCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
             children: [
-              // 左边 15% 显示作者名，竖排显示
+              // 上部分占90%，显示名句、作者和诗名
               Expanded(
-                flex: 15,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center, // 竖直居中
-                    crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
-                    children: quote.poetName.split('').map((char) {
-                      return Text(
-                        char,
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.normal),
-                        textAlign: TextAlign.center, // 每个字符居中对齐
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-              // 中间 70% 显示内容，处理符号并从右向左换行
-              Expanded(
-                flex: 70,
-                child: Center(
-                  // 使用 Center 确保整体内容在页面中居中
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min, // Row 根据内容宽度自适应
-                    mainAxisAlignment: MainAxisAlignment.center, // 水平居中
-                    crossAxisAlignment: CrossAxisAlignment.center, // 垂直居中
-                    children: formatContent(quote.content)
-                        .split('\n')
-                        .reversed
-                        .map((line) {
-                      // 从右到左显示
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                flex: 9, // 上部分占垂直方向的90%
+                child: Row(
+                  children: [
+                    // 左边 15% 显示作者名，竖排显示
+                    Expanded(
+                      flex: 15,
+                      child: Center(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min, // Column 根据内容高度自适应
-                          mainAxisAlignment: MainAxisAlignment.center, // 垂直居中
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center, // 竖直居中
                           crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
-                          children: line.split('').map((char) {
+                          children: quote.poetName.split('').map((char) {
                             return Text(
                               char,
                               style: TextStyle(
-                                fontSize: 18,
-                              ),
-                              textAlign: TextAlign.center, // 每个字符居中显示
+                                  fontSize: 16, fontWeight: FontWeight.normal),
+                              textAlign: TextAlign.center, // 每个字符居中对齐
                             );
                           }).toList(),
                         ),
-                      );
-                    }).toList(),
-                  ),
+                      ),
+                    ),
+                    // 中间 70% 显示内容，处理符号并从右向左换行
+                    Expanded(
+                      flex: 70,
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // Row 根据内容宽度自适应
+                          mainAxisAlignment: MainAxisAlignment.center, // 水平居中
+                          crossAxisAlignment: CrossAxisAlignment.center, // 垂直居中
+                          children: formatContent(quote.content)
+                              .split('\n')
+                              .reversed
+                              .map((line) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Column(
+                                mainAxisSize:
+                                    MainAxisSize.min, // Column 根据内容高度自适应
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center, // 垂直居中
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.center, // 水平居中
+                                children: line.split('').map((char) {
+                                  return Text(
+                                    char,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                    ),
+                                    textAlign: TextAlign.center, // 每个字符居中显示
+                                  );
+                                }).toList(),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                    // 右边 15% 显示诗名
+                    Expanded(
+                      flex: 15,
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center, // 竖直居中
+                          crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
+                          children: quote.poetryName.split('').map((char) {
+                            return Text(
+                              char,
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.normal),
+                              textAlign: TextAlign.center, // 每个字符居中对齐
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              // 右边 15% 显示诗名
+              // 下部分占10%，显示刷新按钮
               Expanded(
-                flex: 15,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center, // 竖直居中
-                    crossAxisAlignment: CrossAxisAlignment.center, // 水平居中
-                    children: quote.poetryName.split('').map((char) {
-                      return Text(
-                        char,
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.normal),
-                        textAlign: TextAlign.center, // 每个字符居中对齐
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-              // 按钮，放在右下角，带有白色背景和阴影
-              Positioned(
-                right: 10, // 右边距
-                bottom: 10, // 底部边距
-                child: Material(
-                  elevation: 5, // 使按钮悬浮在Z轴上
-                  child: InkWell(
-                    onTap: onRefresh, // 调用传入的刷新方法
-                    borderRadius: BorderRadius.circular(30), // 确保点击区域是圆形
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0), // 内边距
+                flex: 1, // 下部分占垂直方向的10%
+                child: Align(
+                  alignment: Alignment.centerRight, // 刷新按钮靠右显示
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16.0), // 右侧间距
+                    child: CupertinoButton(
+                      padding: EdgeInsets.all(10), // 按钮内部的间距
+                      onPressed: onRefresh, // 调用传入的刷新方法
                       child: Icon(
-                        CupertinoIcons.refresh, // 刷新图标
-                        size: 24, // 图标大小
-                        color: Colors.black, // 图标颜色
+                        CupertinoIcons.refresh, // 仅显示刷新图标
+                        size: 24, // 设置图标大小
+                        color: Colors.black, // 设置图标颜色
                       ),
                     ),
                   ),

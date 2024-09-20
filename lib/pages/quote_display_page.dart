@@ -27,9 +27,9 @@ class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text('名句展示'),
-      ),
+      // navigationBar: CupertinoNavigationBar(
+      //   middle: Text('名句展示'),
+      // ),
       child: FutureBuilder<QuoteModel>(
         future: _quote,
         builder: (context, snapshot) {
