@@ -67,3 +67,4 @@ ios/Flutter/Debug.xcconfig
 ios/Flutter/Release.xcconfig
 /ios
 /macos
+/android
