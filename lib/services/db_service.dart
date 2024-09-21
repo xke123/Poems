@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/quote_model.dart';
 import 'dart:io' as io;
+import '../models/author_model.dart';
 
 class DbService {
   static Database? _db;
@@ -30,8 +31,9 @@ class DbService {
           // 数据库文件不存在，从 assets 复制
           print('数据库文件不存在，从 assets 复制');
           ByteData data = await rootBundle.load('assets/database/poems.db');
-          List<int> bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-          
+          List<int> bytes =
+              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
           // 将 assets 中的数据库文件复制到应用数据库路径
           await io.File(path).writeAsBytes(bytes);
         }
@@ -50,24 +52,37 @@ class DbService {
   // 获取随机句子
   static Future<QuoteModel> getRandomSentence() async {
     try {
-      final db = await initDb();  // 初始化数据库
+      final db = await initDb(); // 初始化数据库
       print('正在查询随机句子...');
-      
+
       // 执行 SQL 查询
-      List<Map<String, dynamic>> result = await db.rawQuery(
-        'SELECT * FROM sentence ORDER BY RANDOM() LIMIT 1'
-      );
-      
+      List<Map<String, dynamic>> result =
+          await db.rawQuery('SELECT * FROM sentence ORDER BY RANDOM() LIMIT 1');
+
       if (result.isNotEmpty) {
-        print('查询成功，结果: ${result.first}');  // 打印查询结果
+        print('查询成功，结果: ${result.first}'); // 打印查询结果
         return QuoteModel.fromMap(result.first);
       } else {
-        print('数据库中没有句子');  // 查询结果为空
+        print('数据库中没有句子'); // 查询结果为空
         throw Exception('没有找到句子');
       }
     } catch (e) {
-      print('查询失败: $e');  // 捕捉并输出查询异常
+      print('查询失败: $e'); // 捕捉并输出查询异常
       throw Exception('获取随机句子失败');
+    }
+  }
+
+  // 获取前30个作者
+  static Future<List<AuthorModel>> getAuthors() async {
+    try {
+      final db = await initDb(); // 初始化数据库
+      List<Map<String, dynamic>> result = await db
+          .rawQuery('SELECT Id, Name FROM author ORDER BY id ASC LIMIT 30');
+      print('获取到的作者记录: $result');
+      return result.map((map) => AuthorModel.fromMap(map)).toList();
+    } catch (e) {
+      print('获取作者失败: $e');
+      throw Exception('获取作者失败');
     }
   }
 }

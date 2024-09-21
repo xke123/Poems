@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/quote_display_page.dart';
 import 'pages/quotes_by_category_page.dart';
+import 'models/author_viewmodel.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,8 +30,8 @@ class _MainPageState extends State<MainPage> {
 
   // 底部导航栏对应的页面列表
   static List<Widget> _pages = <Widget>[
-    QuoteDisplayPage(),  // 名句页面
-    QuotesByCategoryPage(),  // 分类页面
+    QuoteDisplayPage(), // 名句页面
+    QuotesByCategoryPage(), // 分类页面
   ];
 
   void _onItemTapped(int index) {
@@ -56,7 +57,7 @@ class _MainPageState extends State<MainPage> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue,
-        onTap: _onItemTapped,  // 切换页面
+        onTap: _onItemTapped, // 切换页面
       ),
     );
   }
