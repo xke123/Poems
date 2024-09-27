@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle, ByteData;
+import 'package:poems/models/collections_model.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:io' show Platform;
@@ -78,11 +80,39 @@ class DbService {
       final db = await initDb(); // 初始化数据库
       List<Map<String, dynamic>> result = await db
           .rawQuery('SELECT Id, Name FROM author ORDER BY id ASC LIMIT 30');
-      print('获取到的作者记录: $result');
+      // print('获取到的作者记录: $result');
       return result.map((map) => AuthorModel.fromMap(map)).toList();
     } catch (e) {
       print('获取作者失败: $e');
       throw Exception('获取作者失败');
+    }
+  }
+
+  // 获取随机的指定数量的作者
+  static Future<List<AuthorModel>> getRandomAuthors(int count) async {
+    try {
+      final db = await initDb(); // 初始化数据库
+      List<Map<String, dynamic>> result = await db.rawQuery(
+          'SELECT Id, Name FROM author ORDER BY RANDOM() LIMIT ?', [count]);
+      return result.map((map) => AuthorModel.fromMap(map)).toList();
+    } catch (e) {
+      print('获取随机作者失败: $e');
+      throw Exception('获取随机作者失败');
+    }
+  }
+
+  // 获取30个作品集
+  static Future<List<CollectionModel>> getCollections() async {
+    try {
+      String jsonString =
+          await rootBundle.loadString('assets/database/collections.json');
+      List<dynamic> jsonResponse = json.decode(jsonString);
+      List<CollectionModel> collections =
+          jsonResponse.map((item) => CollectionModel.fromJson(item)).toList();
+      return collections.take(30).toList(); // 获取前30组数据
+    } catch (e) {
+      print('获取诗集数据失败: $e');
+      throw Exception('获取诗集数据失败');
     }
   }
 }

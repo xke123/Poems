@@ -12,7 +12,7 @@ class QuoteCard extends StatelessWidget {
   String formatContent(String content) {
     // 根据标点符号（如逗号、句号等）进行换行，并删除符号
     String formattedContent = content.replaceAllMapped(
-      RegExp(r'[，。！？、；]'),
+      RegExp(r'[，。！？；]'),
       (Match match) => '\n', // 替换为换行符
     );
     return formattedContent;
