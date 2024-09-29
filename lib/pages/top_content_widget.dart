@@ -232,6 +232,7 @@ class CategoryItemWidget extends StatelessWidget {
       // 朝代
       displayText = item;
       bgColor = Colors.orangeAccent;
+      imagePath = 'assets/image/dynasty_icon.png'; // 朝代图标路径
     } else if (item is AuthorModel) {
       // 作者
       displayText = item.name;
@@ -240,7 +241,7 @@ class CategoryItemWidget extends StatelessWidget {
     } else if (item is CollectionModel) {
       // 作品集
       displayText = item.title;
-      bgColor = Colors.purpleAccent;
+      bgColor = const Color.fromARGB(255, 131, 132, 80);
     }
 
     // 处理作者的样式
@@ -301,6 +302,123 @@ class CategoryItemWidget extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis, // 超出一行显示省略号
                   ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // 处理朝代的样式，显示dynasty_icon.png，并调整文字大小为18
+    if (item is String && imagePath != null) {
+      return Container(
+        width: this.width,
+        height: this.height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0), // 圆角
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              spreadRadius: 2,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.0), // 确保图片和内容有圆角效果
+          child: Stack(
+            children: [
+              // 背景图片填充整个圆角矩形
+              Positioned.fill(
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover, // 确保图片充满容器
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey, // 图片加载失败时的灰色背景
+                      child: Icon(
+                        Icons.image, // 显示默认图片图标
+                        size: this.height * 0.3,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // 中心浮动的文字
+              Center(
+                child: Text(
+                  displayText,
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 240, 240, 240), // 白色字体
+                    fontSize: 16, // 字体大小设为18
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 5,
+                        color: Colors.black.withOpacity(0.5), // 阴影提升可读性
+                        offset: Offset(1, 1),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis, // 超出一行显示省略号
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (item is CollectionModel) {
+      return Container(
+        width: this.width,
+        height: this.height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0), // 圆角
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              spreadRadius: 2,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.0), // 确保内容有圆角效果
+          child: Stack(
+            children: [
+              // 背景颜色
+              Positioned.fill(
+                child: Container(
+                  color: const Color.fromARGB(
+                      255, 221, 221, 221), // 灰色背景用于 Collections
+                ),
+              ),
+              // 竖排显示文字，位于右上角
+              Positioned(
+                top: 10.0, // 调整文字顶部位置
+                right: 14.0, // 调整文字右侧位置
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: displayText
+                      .split('') // 将文字拆分成单个字符
+                      .map((char) => Text(
+                            char,
+                            style: TextStyle(
+                              color: Colors.black, // 黑色字体
+                              fontSize: 14, // 字体大小可以调整
+                              fontWeight: FontWeight.normal,
+                              backgroundColor: Colors.white, // 白色背景
+                              height: 1.0,
+                            ),
+                          ))
+                      .toList(),
                 ),
               ),
             ],
