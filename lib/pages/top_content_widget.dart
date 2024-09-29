@@ -225,7 +225,9 @@ class CategoryItemWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     String displayText = '';
     Color bgColor = Colors.blueAccent; // 默认颜色
+    String? imagePath; // 图片路径
 
+    // 判断 item 类型并处理
     if (item is String) {
       // 朝代
       displayText = item;
@@ -234,12 +236,80 @@ class CategoryItemWidget extends StatelessWidget {
       // 作者
       displayText = item.name;
       bgColor = Colors.greenAccent;
+      imagePath = 'assets/images/${item.id}.jpg'; // 根据 Id 获取图片路径
     } else if (item is CollectionModel) {
       // 作品集
       displayText = item.title;
       bgColor = Colors.purpleAccent;
     }
 
+    // 处理作者的样式
+    if (item is AuthorModel && imagePath != null) {
+      return Container(
+        width: this.width,
+        height: this.height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0), // 圆角
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              spreadRadius: 2,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.0), // 确保图片和内容有圆角效果
+          child: Stack(
+            children: [
+              // 背景图片
+              Positioned.fill(
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover, // 图片充满整个容器
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey, // 如果图片加载失败，显示灰色背景
+                      child: Icon(
+                        Icons.person,
+                        size: this.height * 0.3,
+                        color: Colors.white,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // 作者名字显示在右下角圆角矩形内
+              Positioned(
+                bottom: 5, // 距离底部 8 像素
+                right: -6, // 距离右边 8 像素
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 2.0), // 适当的内边距
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6), // 半透明背景，提升可读性
+                    borderRadius: BorderRadius.circular(12.0), // 圆角
+                  ),
+                  child: Text(
+                    displayText,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis, // 超出一行显示省略号
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Collection 和 朝代的默认样式
     return Container(
       width: this.width,
       height: this.height,
@@ -251,26 +321,21 @@ class CategoryItemWidget extends StatelessWidget {
             color: Colors.black.withOpacity(0.2),
             blurRadius: 6,
             spreadRadius: 2,
-            offset: Offset(3, 3),
+            offset: Offset(0, 3),
           ),
         ],
       ),
       child: Center(
         child: Text(
           displayText,
-          textAlign: TextAlign.center,
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            shadows: [
-              Shadow(
-                blurRadius: 3,
-                color: Colors.black.withOpacity(0.7),
-                offset: Offset(1, 1),
-              ),
-            ],
           ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis, // 超出一行显示省略号
         ),
       ),
     );
