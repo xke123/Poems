@@ -1,7 +1,10 @@
+// main.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'pages/quote_display_page.dart';
 import 'pages/quotes_by_category_page.dart';
+import 'pages/search_page.dart'; // 引入搜索页面
 import 'models/author_viewmodel.dart';
 import 'models/collections_viewmodel.dart';
 
@@ -47,6 +50,7 @@ class _MainPageState extends State<MainPage> {
   static List<Widget> _pages = <Widget>[
     QuoteDisplayPage(), // 名句页面
     QuotesByCategoryPage(), // 分类页面
+    SearchPage(), // 搜索页面
   ];
 
   void _onItemTapped(int index) {
@@ -58,6 +62,9 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar: AppBar(
+      //   title: Text('名句展示'),
+      // ),
       body: _pages[_selectedIndex], // 显示选中的页面
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -68,6 +75,10 @@ class _MainPageState extends State<MainPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.category),
             label: '分类',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: '搜索',
           ),
         ],
         currentIndex: _selectedIndex,
