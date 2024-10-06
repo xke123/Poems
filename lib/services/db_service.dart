@@ -10,6 +10,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/quote_model.dart';
 import 'dart:io' as io;
 import '../models/author_model.dart';
+import '../models/poemdetailmodel.dart';
 
 class DbService {
   static Database? _db;
@@ -137,5 +138,26 @@ class DbService {
     return List.generate(maps.length, (i) {
       return CollectionModel.fromMap(maps[i]);
     });
+  }
+
+  //获取诗词详情
+  static Future<PoemDetailModel> getQuoteById(String id) async {
+    try {
+      final db = await initDb(); // 初始化数据库
+      print('数据库已连接，正在执行查询语句: SELECT * FROM poem WHERE Id = $id');
+
+      List<Map<String, dynamic>> result =
+          await db.rawQuery('SELECT * FROM poem WHERE Id = ?', [id]);
+
+      if (result.isNotEmpty) {
+        print('查询成功，返回的结果: $result');
+        return PoemDetailModel.fromMap(result.first);
+      } else {
+        throw Exception('没有找到诗词');
+      }
+    } catch (e) {
+      print('获取诗词详情失败，id: $id，错误信息: $e');
+      throw Exception('获取诗词数据失败: $e');
+    }
   }
 }
