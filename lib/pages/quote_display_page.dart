@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import '../services/db_service.dart';
 import '../models/quote_model.dart';
 import '../widgets/quote_card.dart';
@@ -26,15 +26,16 @@ class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      // navigationBar: CupertinoNavigationBar(
-      //   middle: Text('名句展示'),
+    return Scaffold(
+      // appBar: AppBar(
+      //   title: Text('名句展示'),
+      //   centerTitle: true,
       // ),
-      child: FutureBuilder<QuoteModel>(
+      body: FutureBuilder<QuoteModel>(
         future: _quote,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CupertinoActivityIndicator());
+            return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('加载失败，请重试！'));
           } else if (snapshot.hasData) {
@@ -47,6 +48,11 @@ class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
           }
         },
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _refreshQuote,
+      //   child: Icon(Icons.refresh),
+      //   tooltip: '刷新',
+      // ),
     );
   }
 }

@@ -21,26 +21,20 @@ class QuoteCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0), // 增加外边距，确保阴影有空间显示
         child: Container(
           height: MediaQuery.of(context).size.height * 0.618,
           width: MediaQuery.of(context).size.width * 0.8,
           decoration: BoxDecoration(
             color: Colors.white, // 卡片背景颜色
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(16.0), // 圆角半径
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.8), // 阴影颜色，增加透明度
-                spreadRadius: 20, // 扩展范围，值越大阴影越大
-                blurRadius: 15, // 模糊程度，值越大阴影越柔和
-                offset: Offset(0, 10), // Y轴偏移，使阴影下沉
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3), // 辅助的更浅阴影
-                spreadRadius: 10,
+                color: Colors.black.withOpacity(0.1),
                 blurRadius: 10,
-                offset: Offset(0, 5), // 更小的偏移，增加层次感
+                spreadRadius: 5,
+                offset: Offset(0, 5),
               ),
             ],
           ),
@@ -63,7 +57,9 @@ class QuoteCard extends StatelessWidget {
                             return Text(
                               char,
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.normal),
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                              ),
                               textAlign: TextAlign.center, // 每个字符居中对齐
                             );
                           }).toList(),
@@ -89,7 +85,7 @@ class QuoteCard extends StatelessWidget {
                                 mainAxisSize:
                                     MainAxisSize.min, // Column 根据内容高度自适应
                                 mainAxisAlignment:
-                                    MainAxisAlignment.center, // 垂直居中
+                                    MainAxisAlignment.center, // 竖直居中
                                 crossAxisAlignment:
                                     CrossAxisAlignment.center, // 水平居中
                                 children: line.split('').map((char) {
@@ -119,7 +115,9 @@ class QuoteCard extends StatelessWidget {
                             return Text(
                               char,
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.normal),
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal,
+                              ),
                               textAlign: TextAlign.center, // 每个字符居中对齐
                             );
                           }).toList(),

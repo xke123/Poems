@@ -1,10 +1,17 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart'; // 确保导入了scheduler包
 import 'package:provider/provider.dart';
 import '../models/author_model.dart';
 import '../models/author_viewmodel.dart';
 import '../models/collections_model.dart';
 import '../models/collections_viewmodel.dart';
+
+// 定义滚动方向枚举
+enum ScrollDirection {
+  left, // 从右向左滚动
+  right, // 从左向右滚动
+}
 
 class TopContentWidget extends StatefulWidget {
   final double topSectionHeight;
@@ -20,20 +27,22 @@ class TopContentWidget extends StatefulWidget {
 }
 
 class _TopContentWidgetState extends State<TopContentWidget> {
-  // 随机数生成器
   final Random _random = Random();
 
-  // 存储两组数据
   List<dynamic>? group1;
   List<dynamic>? group2;
+
+  bool _isDataFetched = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _handleDataFetch(context);
+    if (!_isDataFetched) {
+      _handleDataFetch(context);
+      _isDataFetched = true;
+    }
   }
 
-  // 数据获取处理函数
   void _handleDataFetch(BuildContext context) async {
     try {
       // 1. 随机获取四个朝代
@@ -91,10 +100,13 @@ class _TopContentWidgetState extends State<TopContentWidget> {
       newGroup1.shuffle(_random);
       newGroup2.shuffle(_random);
 
-      // 6. 更新状态以渲染数据
+      // 6. 为了实现无缝滚动，重复数据
+      List<dynamic> loopGroup1 = [...newGroup1, ...newGroup1];
+      List<dynamic> loopGroup2 = [...newGroup2, ...newGroup2];
+
       setState(() {
-        group1 = newGroup1;
-        group2 = newGroup2;
+        group1 = loopGroup1;
+        group2 = loopGroup2;
       });
     } catch (e) {
       print('数据获取过程中出现错误: $e');
@@ -151,61 +163,161 @@ class _TopContentWidgetState extends State<TopContentWidget> {
   Widget _buildTopContent() {
     double contentHeight = widget.topSectionHeight * 0.7; // 内容区域的总高度
     double partHeight = contentHeight / 2; // 每个部分的高度
-    double itemHeight = partHeight; // item 的高度为部分高度的80%
-    double itemWidth = partHeight * 0.8; // 宽度等于高度
+    double itemHeight = partHeight; // item 的高度为部分高度
+    double itemWidth = partHeight * 0.8; // 宽度等于高度的0.8倍
 
     return Column(
       children: [
-        // 第一部分
+        // 第一部分 - 从右向左滚动
         Container(
           height: partHeight,
-          child: Center(
-            child: Container(
-              height: itemHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: group1!.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 10.0),
-                    child: CategoryItemWidget(
-                      item: group1![index],
-                      height: itemHeight,
-                      width: itemWidth,
-                    ),
-                  );
-                },
-              ),
-            ),
+          child: AutoScrollWidget(
+            items: group1!,
+            itemHeight: itemHeight,
+            itemWidth: itemWidth,
+            itemsPerCopy: group1!.length ~/ 2, // 原始组的长度
+            scrollDirection: ScrollDirection.left, // 设置滚动方向
           ),
         ),
-        // 第二部分
+        // 第二部分 - 从左向右滚动
         Container(
           height: partHeight,
-          child: Center(
-            child: Container(
-              height: itemHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: group2!.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 10.0),
-                    child: CategoryItemWidget(
-                      item: group2![index],
-                      height: itemHeight,
-                      width: itemWidth,
-                    ),
-                  );
-                },
-              ),
-            ),
+          child: AutoScrollWidget(
+            items: group2!,
+            itemHeight: itemHeight,
+            itemWidth: itemWidth,
+            itemsPerCopy: group2!.length ~/ 2, // 原始组的长度
+            scrollDirection: ScrollDirection.right, // 设置滚动方向
           ),
         ),
       ],
     );
+  }
+}
+
+// 自定义的自动滚动组件
+class AutoScrollWidget extends StatefulWidget {
+  final List<dynamic> items;
+  final double itemHeight;
+  final double itemWidth;
+  final double paddingHorizontal;
+  final double paddingVertical;
+  final int itemsPerCopy;
+  final ScrollDirection scrollDirection; // 新增的滚动方向参数
+
+  AutoScrollWidget({
+    required this.items,
+    required this.itemHeight,
+    required this.itemWidth,
+    this.paddingHorizontal = 8.0,
+    this.paddingVertical = 10.0,
+    required this.itemsPerCopy,
+    required this.scrollDirection, // 接收滚动方向
+  });
+
+  @override
+  _AutoScrollWidgetState createState() => _AutoScrollWidgetState();
+}
+
+class _AutoScrollWidgetState extends State<AutoScrollWidget>
+    with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late Ticker _ticker;
+  double _scrollSpeed = 10.0; // 每秒滚动像素数
+  double _copyWidth = 0.0;
+  double _currentScroll = 0.0;
+  double _lastTick = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateCopyWidth();
+      _startScrolling();
+    });
+  }
+
+  void _calculateCopyWidth() {
+    // 计算一组数据的总宽度
+    // 每个item的宽度加上左右的padding
+    _copyWidth =
+        widget.itemsPerCopy * (widget.itemWidth + 2 * widget.paddingHorizontal);
+    // 根据滚动方向设置初始滚动位置
+    if (widget.scrollDirection == ScrollDirection.right) {
+      _currentScroll = _copyWidth;
+      _scrollController.jumpTo(_currentScroll);
+    } else {
+      _currentScroll = 0.0;
+      _scrollController.jumpTo(_currentScroll);
+    }
+  }
+
+  void _startScrolling() {
+    _ticker = this.createTicker((Duration elapsed) {
+      double currentTick = elapsed.inMicroseconds / 1e6; // 转换为秒
+      if (_lastTick == 0.0) {
+        _lastTick = currentTick;
+        return;
+      }
+      double deltaTime = currentTick - _lastTick;
+      _lastTick = currentTick;
+
+      double deltaPixels = _scrollSpeed * deltaTime;
+      if (widget.scrollDirection == ScrollDirection.left) {
+        _currentScroll += deltaPixels;
+        if (_currentScroll >= _copyWidth) {
+          // 重置到第一组数据的起始位置
+          _currentScroll -= _copyWidth;
+          _scrollController.jumpTo(_currentScroll);
+        }
+      } else {
+        _currentScroll -= deltaPixels;
+        if (_currentScroll <= 0.0) {
+          // 重置到第二组数据的起始位置
+          _currentScroll += _copyWidth;
+          _scrollController.jumpTo(_currentScroll);
+        }
+      }
+
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_currentScroll);
+      }
+    });
+    _ticker.start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.stop();
+    _ticker.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.items.isEmpty
+        ? Container()
+        : ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: NeverScrollableScrollPhysics(), // 禁止手动滚动
+            itemCount: widget.items.length,
+            itemBuilder: (context, index) {
+              var item = widget.items[index];
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: widget.paddingHorizontal,
+                    vertical: widget.paddingVertical),
+                child: CategoryItemWidget(
+                  item: item,
+                  height: widget.itemHeight,
+                  width: widget.itemWidth,
+                ),
+              );
+            },
+          );
   }
 }
 
@@ -246,214 +358,274 @@ class CategoryItemWidget extends StatelessWidget {
 
     // 处理作者的样式
     if (item is AuthorModel && imagePath != null) {
-      return Container(
-        width: this.width,
-        height: this.height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0), // 圆角
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              spreadRadius: 2,
-              offset: Offset(0, 3),
+      return Material(
+        color: Colors.transparent, // 透明背景以避免覆盖父背景
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16.0),
+          onTap: () {
+            // 输出作者信息
+            print('类型为: 作者');
+            print('作者名: ${item.name}');
+            print('作者id: ${item.id}');
+          },
+          child: Container(
+            width: this.width,
+            height: this.height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.0), // 圆角
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16.0), // 确保图片和内容有圆角效果
-          child: Stack(
-            children: [
-              // 背景图片
-              Positioned.fill(
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover, // 图片充满整个容器
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey, // 如果图片加载失败，显示灰色背景
-                      child: Icon(
-                        Icons.person,
-                        size: this.height * 0.3,
-                        color: Colors.white,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // 作者名字显示在右下角圆角矩形内
-              Positioned(
-                bottom: 5, // 距离底部 8 像素
-                right: -6, // 距离右边 8 像素
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0, vertical: 2.0), // 适当的内边距
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6), // 半透明背景，提升可读性
-                    borderRadius: BorderRadius.circular(12.0), // 圆角
-                  ),
-                  child: Text(
-                    displayText,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0), // 确保图片和内容有圆角效果
+              child: Stack(
+                children: [
+                  // 背景图片
+                  Positioned.fill(
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover, // 图片充满整个容器
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey, // 如果图片加载失败，显示灰色背景
+                          child: Icon(
+                            Icons.person,
+                            size: this.height * 0.3,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis, // 超出一行显示省略号
                   ),
-                ),
+                  // 作者名字显示在右下角圆角矩形内
+                  Positioned(
+                    bottom: 5, // 距离底部 5 像素
+                    right: -6, // 距离右边 -6 像素
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 2.0), // 适当的内边距
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6), // 半透明背景，提升可读性
+                        borderRadius: BorderRadius.circular(12.0), // 圆角
+                      ),
+                      child: Text(
+                        displayText,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis, // 超出一行显示省略号
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       );
     }
 
-    // 处理朝代的样式，显示dynasty_icon.png，并调整文字大小为18
+    // 处理朝代的样式，显示dynasty_icon.png，并调整文字大小为16
     if (item is String && imagePath != null) {
-      return Container(
-        width: this.width,
-        height: this.height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0), // 圆角
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              spreadRadius: 2,
-              offset: Offset(0, 3),
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16.0),
+          onTap: () {
+            // 输出朝代信息
+            print('类型为: 朝代');
+            print('朝代名: $item');
+          },
+          child: Container(
+            width: this.width,
+            height: this.height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.0), // 圆角
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16.0), // 确保图片和内容有圆角效果
-          child: Stack(
-            children: [
-              // 背景图片填充整个圆角矩形
-              Positioned.fill(
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover, // 确保图片充满容器
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey, // 图片加载失败时的灰色背景
-                      child: Icon(
-                        Icons.image, // 显示默认图片图标
-                        size: this.height * 0.3,
-                        color: Colors.white,
-                      ),
-                    );
-                  },
-                ),
-              ),
-              // 中心浮动的文字
-              Center(
-                child: Text(
-                  displayText,
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 240, 240, 240), // 白色字体
-                    fontSize: 16, // 字体大小设为18
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 5,
-                        color: Colors.black.withOpacity(0.5), // 阴影提升可读性
-                        offset: Offset(1, 1),
-                      ),
-                    ],
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0), // 确保图片和内容有圆角效果
+              child: Stack(
+                children: [
+                  // 背景图片填充整个圆角矩形
+                  Positioned.fill(
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover, // 确保图片充满容器
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey, // 图片加载失败时的灰色背景
+                          child: Icon(
+                            Icons.image, // 显示默认图片图标
+                            size: this.height * 0.3,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis, // 超出一行显示省略号
-                ),
+                  // 中心浮动的文字
+                  Center(
+                    child: Text(
+                      displayText,
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 240, 240, 240), // 白色字体
+                        fontSize: 16, // 字体大小设为16
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 5,
+                            color: Colors.black.withOpacity(0.5), // 阴影提升可读性
+                            offset: Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis, // 超出一行显示省略号
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       );
     }
 
     if (item is CollectionModel) {
-      return Container(
-        width: this.width,
-        height: this.height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0), // 圆角
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              spreadRadius: 2,
-              offset: Offset(0, 3),
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16.0),
+          onTap: () {
+            // 输出作品集信息
+            print('类型为: 作品集');
+            print('作品集名: ${item.title}');
+            print('作品集id: ${item.id}');
+          },
+          child: Container(
+            width: this.width,
+            height: this.height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.0), // 圆角
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16.0), // 确保内容有圆角效果
-          child: Stack(
-            children: [
-              // 背景颜色
-              Positioned.fill(
-                child: Container(
-                  color: const Color.fromARGB(
-                      255, 221, 221, 221), // 灰色背景用于 Collections
-                ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.0), // 确保内容有圆角效果
+              child: Stack(
+                children: [
+                  // 背景颜色
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.grey[200], // 灰色背景用于作品集
+                    ),
+                  ),
+                  // 竖排文字显示在一个白色矩形中，位于右上角
+                  Positioned(
+                    top: 6.0, // 调整文字顶部位置
+                    right: 12.0, // 调整文字右侧位置
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 2.0, vertical: 2.0), // 内边距
+                      decoration: BoxDecoration(
+                        color: Colors.white, // 白色背景
+                        borderRadius: BorderRadius.circular(0.0), // 圆角效果
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                            offset: Offset(0, 2), // 轻微阴影
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min, // 内容高度根据最小化排列
+                        crossAxisAlignment: CrossAxisAlignment.center, // 文字居中对齐
+                        children: displayText
+                            .split('') // 将文字拆分成单个字符
+                            .map((char) => Text(
+                                  char,
+                                  style: TextStyle(
+                                    color: Colors.black, // 黑色字体
+                                    fontSize: 14, // 字体大小可以调整
+                                    fontWeight: FontWeight.normal,
+                                    height: 1.0, // 设置最小行高，文字间距最小
+                                  ),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              // 竖排显示文字，位于右上角
-              Positioned(
-                top: 10.0, // 调整文字顶部位置
-                right: 14.0, // 调整文字右侧位置
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: displayText
-                      .split('') // 将文字拆分成单个字符
-                      .map((char) => Text(
-                            char,
-                            style: TextStyle(
-                              color: Colors.black, // 黑色字体
-                              fontSize: 14, // 字体大小可以调整
-                              fontWeight: FontWeight.normal,
-                              backgroundColor: Colors.white, // 白色背景
-                              height: 1.0,
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       );
     }
 
     // Collection 和 朝代的默认样式
-    return Container(
-      width: this.width,
-      height: this.height,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16.0), // 圆角
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 6,
-            spreadRadius: 2,
-            offset: Offset(0, 3),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16.0),
+        onTap: () {
+          // 默认的点击处理
+          print('点击了未知类型的项');
+        },
+        child: Container(
+          width: this.width,
+          height: this.height,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16.0), // 圆角
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 6,
+                spreadRadius: 2,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          displayText,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+          child: Center(
+            child: Text(
+              displayText,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis, // 超出一行显示省略号
+            ),
           ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis, // 超出一行显示省略号
         ),
       ),
     );

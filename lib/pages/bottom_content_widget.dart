@@ -118,7 +118,8 @@ class CategorySection extends StatelessWidget {
             itemBuilder: (context, index) {
               final imagePath = 'assets/image/dynasty_icon.png'; // 示例图片路径
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
                 child: Container(
                   width: contentHeight, // 高度和宽度一致，保持正方形
                   decoration: BoxDecoration(

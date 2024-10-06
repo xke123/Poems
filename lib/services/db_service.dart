@@ -88,12 +88,13 @@ class DbService {
     }
   }
 
-  // 获取随机的指定数量的作者
+  // 获取随机的指定数量的作者，HasImage 为 1
   static Future<List<AuthorModel>> getRandomAuthors(int count) async {
     try {
       final db = await initDb(); // 初始化数据库
       List<Map<String, dynamic>> result = await db.rawQuery(
-          'SELECT Id, Name FROM author ORDER BY RANDOM() LIMIT ?', [count]);
+          'SELECT Id, Name FROM author WHERE HasImage = 1 ORDER BY RANDOM() LIMIT ?',
+          [count]);
       return result.map((map) => AuthorModel.fromMap(map)).toList();
     } catch (e) {
       print('获取随机作者失败: $e');
