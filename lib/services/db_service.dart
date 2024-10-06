@@ -12,6 +12,7 @@ import 'dart:io' as io;
 import '../models/author_model.dart';
 import '../models/poemdetailmodel.dart';
 import '../models/poetdetail_model.dart';
+import '../models/dynastydetailmodel.dart';
 
 class DbService {
   static Database? _db;
@@ -180,6 +181,49 @@ class DbService {
     } catch (e) {
       print('获取作者详情失败，ID: $id，错误信息: $e');
       throw Exception('获取作者数据失败: $e');
+    }
+  }
+
+  // 获取指定朝代的作品和作者数据，并支持分页
+  static Future<List<DynastyDetailModel>> getDynastyData(
+      String dynasty, int page, int pageSize) async {
+    try {
+      final db = await initDb(); // 初始化数据库
+      final offset = (page - 1) * pageSize; // 计算偏移量
+
+      // 从 poem 表获取指定朝代的作品数据，支持分页
+      List<Map<String, dynamic>> poemsResult = await db.rawQuery(
+        'SELECT * FROM poem WHERE Dynasty = ? LIMIT ? OFFSET ?',
+        [dynasty, pageSize, offset],
+      );
+
+      // 从 author 表获取指定朝代的作者数据，支持分页
+      List<Map<String, dynamic>> authorsResult = await db.rawQuery(
+        'SELECT * FROM author WHERE Dynasty = ? LIMIT ? OFFSET ?',
+        [dynasty, pageSize, offset],
+      );
+
+      // 打印获取到的作品和作者数量
+      print('获取到的诗词数量: ${poemsResult.length}');
+      print('获取到的作者数量: ${authorsResult.length}');
+
+      // 组合数据并返回
+      List<DynastyDetailModel> dynastyDetails = [];
+
+      // 处理诗词数据
+      for (var poem in poemsResult) {
+        dynastyDetails.add(DynastyDetailModel.fromPoemMap(poem));
+      }
+
+      // 处理作者数据
+      for (var author in authorsResult) {
+        dynastyDetails.add(DynastyDetailModel.fromAuthorMap(author));
+      }
+
+      return dynastyDetails;
+    } catch (e) {
+      print('获取朝代数据失败: $e');
+      throw Exception('获取朝代数据失败');
     }
   }
 }

@@ -4,6 +4,9 @@ import '../models/author_viewmodel.dart';
 import '../models/collections_viewmodel.dart';
 import '../widgets/author_section_pagination.dart';
 import '../widgets/collection_section_pagination.dart';
+import 'package:poems/services/db_service.dart'; // 导入数据库服务
+import '../models/dynastydetailmodel.dart';
+import '../pages/detail/dynasty.dart';
 
 class BottomContentWidget extends StatelessWidget {
   final double bottomContainerHeight;
@@ -114,41 +117,66 @@ class CategorySection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             itemBuilder: (context, index) {
-              final imagePath = 'assets/image/dynasty_icon.png'; // 示例图片路径
+              final String dynasty = items[index]; // 当前朝代
+
               return Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                child: Container(
-                  width: contentHeight * 0.8, // 高度和宽度一致，保持正方形
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(imagePath),
-                      fit: BoxFit.cover,
-                    ),
-                    borderRadius: BorderRadius.circular(4.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 6,
-                        spreadRadius: 2,
-                        offset: Offset(0, 3),
+                child: GestureDetector(
+                  onTap: () async {
+                    int page = 1;
+                    int pageSize = 30;
+
+                    // 获取分页数据
+                    List<DynastyDetailModel> dynastyDetails =
+                        await DbService.getDynastyData(dynasty, page, pageSize);
+
+                    // 跳转到 DynastyDetailPage 并传递数据
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DynastyDetailPage(
+                          dynasty: dynasty,
+                          dynastyDetails: dynastyDetails,
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      items[index],
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 3,
-                            color: Colors.black.withOpacity(0.7),
-                            offset: Offset(1, 1),
-                          ),
-                        ],
+                    );
+
+                    // 下一页数据
+                    page++;
+                  },
+                  child: Container(
+                    width: contentHeight * 0.8, // 高度和宽度一致，保持正方形
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('assets/image/dynasty_icon.png'),
+                        fit: BoxFit.cover,
+                      ),
+                      borderRadius: BorderRadius.circular(4.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6,
+                          spreadRadius: 2,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        dynasty,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 3,
+                              color: Colors.black.withOpacity(0.7),
+                              offset: Offset(1, 1),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -1,6 +1,9 @@
 // lib/pages/search_page.dart
 
 import 'package:flutter/material.dart';
+import '../services/search_service.dart';
+import 'search/authorResult.dart';
+import '../models/search/author.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -57,15 +60,65 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   // 搜索方法
-  void _performSearch() {
+  void _performSearch() async {
     String query = _searchController.text.trim();
     print('搜索内容: $query');
     print('选中的朝代: $selectedDynasty');
     print('选中的选项: $selectedOption');
 
-    // 这里可以调用搜索服务执行实际的搜索逻辑
-    // 例如：
-    // SearchService.search(query, selectedDynasty, selectedOption);
+    try {
+      // 调用搜索服务
+      List<dynamic> results = await SearchService.search(
+        query: query,
+        dynasty: selectedDynasty,
+        option: selectedOption,
+        limit: 30,
+        offset: 0,
+      );
+
+      // 输出搜索结果数量
+      print('搜索结果数量: ${results.length}');
+
+      // 根据搜索选项跳转到不同的结果页面
+      if (selectedOption == '作者') {
+        // 跳转到 AuthorResultPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AuthorResultPage(
+              searchQuery: query,
+              dynasty: selectedDynasty,
+              authorResults: results
+                  .where((result) =>
+                      result is AuthorPoemModel && result.authorId != null)
+                  .toList()
+                  .cast<AuthorPoemModel>(),
+              poemResults: results
+                  .where((result) =>
+                      result is AuthorPoemModel && result.poemId != null)
+                  .toList()
+                  .cast<AuthorPoemModel>(),
+            ),
+          ),
+        );
+      }
+      // else if (selectedOption == '作品') {
+      //   // 这里跳转到一个作品结果页面，你可以类似地创建一个作品结果页面
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) => PoemResultPage(
+      //         searchQuery: query,
+      //         dynasty: selectedDynasty,
+      //         poemResults: results.cast<PoemDetailModel>(), // 这里的类型转换取决于作品结果
+      //       ),
+      //     ),
+      //   );
+      // }
+      // 可以继续添加其他选项的页面，比如作品集和名句
+    } catch (e) {
+      print('搜索出现错误: $e');
+    }
   }
 
   @override
@@ -88,7 +141,7 @@ class _SearchPageState extends State<SearchPage> {
                 : (MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top -
                         MediaQuery.of(context).padding.bottom) *
-                    0.9,
+                    0.8,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(_isSearchBoxTapped ? 0 : 20),
