@@ -17,7 +17,7 @@ class BottomContentWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 每个部分的高度应为圆角矩形框高度的五分之一
-    final sectionHeight = bottomContainerHeight / 5;
+    final sectionHeight = bottomContainerHeight / 4;
 
     return Align(
       alignment: Alignment.topCenter,
@@ -90,7 +90,7 @@ class CategorySection extends StatelessWidget {
   Widget build(BuildContext context) {
     // 计算每个部分的标题和内容的高度
     final titleHeight = sectionHeight * 0.2; // 标题占20%高度
-    final contentHeight = sectionHeight * 0.8; // 内容占80%高度
+    final contentHeight = sectionHeight * 0.7; // 内容占80%高度
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,15 +117,15 @@ class CategorySection extends StatelessWidget {
               final imagePath = 'assets/image/dynasty_icon.png'; // 示例图片路径
               return Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                 child: Container(
-                  width: contentHeight, // 高度和宽度一致，保持正方形
+                  width: contentHeight * 0.8, // 高度和宽度一致，保持正方形
                   decoration: BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage(imagePath),
                       fit: BoxFit.cover,
                     ),
-                    borderRadius: BorderRadius.circular(16.0),
+                    borderRadius: BorderRadius.circular(4.0),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
@@ -140,7 +140,7 @@ class CategorySection extends StatelessWidget {
                       items[index],
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         shadows: [
                           Shadow(
@@ -162,10 +162,9 @@ class CategorySection extends StatelessWidget {
   }
 }
 
-// 文体部分组件保持不变
 class WenTiSection extends StatelessWidget {
   final List<String> wenTiItems = ['诗', '词', '曲', '赋', '文'];
-  final double sectionHeight; // 添加 sectionHeight 参数
+  final double sectionHeight;
 
   WenTiSection({required this.sectionHeight});
 
@@ -189,28 +188,31 @@ class WenTiSection extends StatelessWidget {
         ),
         // 内容栏部分，水平滑动的圆角矩形列表
         Container(
-          height: contentHeight,
+          height: contentHeight * 0.9,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: wenTiItems.length,
             itemBuilder: (context, index) {
+              final String wenTi = wenTiItems[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                 child: Container(
-                  width: contentHeight * 0.6, // 宽度设为内容高度的60%
+                  width: contentHeight * 0.55, // 宽度设为内容高度的70%
                   decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  child: Center(
-                    child: Text(
-                      wenTiItems[index],
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                    color: Colors.white, // 白色背景
+                    borderRadius: BorderRadius.circular(16.0), // 圆角矩形
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 6,
+                        spreadRadius: 2,
+                        offset: Offset(0, 3),
                       ),
-                    ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: _buildWenTiImages(wenTi), // 根据文体类型生成图片
                   ),
                 ),
               );
@@ -219,5 +221,112 @@ class WenTiSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  List<Widget> _buildWenTiImages(String wenTi) {
+    List<Widget> images = [];
+
+    switch (wenTi) {
+      case '诗':
+        images.addAll([
+          Positioned(
+            top: 1,
+            left: 1,
+            child: Image.asset(
+              'assets/image/yan.png',
+              width: 30,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
+          ),
+          Positioned(
+            bottom: 1,
+            right: 1,
+            child: Image.asset(
+              'assets/image/shi.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ]);
+        break;
+      case '词':
+        images.addAll([
+          Positioned(
+            top: 1,
+            left: 1,
+            child: Image.asset(
+              'assets/image/yan.png',
+              width: 30,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
+          ),
+          Positioned(
+            bottom: 1,
+            right: 1,
+            child: Image.asset(
+              'assets/image/si.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ]);
+        break;
+      case '文':
+        images.add(
+          Center(
+            child: Image.asset(
+              'assets/image/wen.png',
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+        break;
+      case '赋':
+        images.addAll([
+          Positioned(
+            top: 1,
+            left: 1,
+            child: Image.asset(
+              'assets/image/bei.png',
+              width: 30,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
+          ),
+          Positioned(
+            bottom: 1,
+            right: 1,
+            child: Image.asset(
+              'assets/image/wu.png',
+              width: 40,
+              height: 40,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ]);
+        break;
+      case '曲':
+        images.add(
+          Center(
+            child: Image.asset(
+              'assets/image/qu.png',
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+        break;
+      default:
+        break;
+    }
+
+    return images;
   }
 }

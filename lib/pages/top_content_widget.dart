@@ -441,7 +441,7 @@ class CategoryItemWidget extends StatelessWidget {
       return Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(12.0),
           onTap: () {
             // 输出朝代信息
             print('类型为: 朝代');
@@ -488,7 +488,7 @@ class CategoryItemWidget extends StatelessWidget {
                       displayText,
                       style: TextStyle(
                         color: const Color.fromARGB(255, 240, 240, 240), // 白色字体
-                        fontSize: 16, // 字体大小设为16
+                        fontSize: 18, // 字体大小设为16
                         fontWeight: FontWeight.bold,
                         shadows: [
                           Shadow(

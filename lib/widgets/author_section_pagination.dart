@@ -63,7 +63,7 @@ class _AuthorSectionPaginationState extends State<AuthorSectionPagination> {
             ),
             // 内容栏部分，水平滑动的圆角矩形列表
             Container(
-              height: widget.sectionHeight * 0.8,
+              height: widget.sectionHeight * 0.7,
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
@@ -86,40 +86,64 @@ class _AuthorSectionPaginationState extends State<AuthorSectionPagination> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8.0, vertical: 10.0),
                     child: Container(
-                      width: widget.sectionHeight * 0.8, // 保持正方形
+                      width: widget.sectionHeight * 0.4,
+                      height: widget.sectionHeight * 0.8,
                       decoration: BoxDecoration(
-                        color: Colors.grey, // 背景色
-                        borderRadius: BorderRadius.circular(16.0), // 圆角
+                        borderRadius: BorderRadius.circular(12.0), // 圆角
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 6,
-                            spreadRadius: 2,
-                            offset: Offset(0, 3),
+                            color: Colors.black.withOpacity(0.2), // 阴影颜色
+                            blurRadius: 6.0, // 模糊半径
+                            spreadRadius: 2.0, // 阴影扩散半径
+                            offset: Offset(0, 3), // 阴影偏移量
                           ),
                         ],
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Stack(
                         children: [
-                          Image.asset(
-                            imagePath,
-                            width: widget.sectionHeight * 0.48, // 图片大小为内容高度的60%
-                            height: widget.sectionHeight * 0.48,
-                            errorBuilder: (context, error, stackTrace) {
-                              // 如果图片加载失败，显示占位符
-                              return Icon(Icons.person,
-                                  size: widget.sectionHeight * 0.48,
-                                  color: Colors.white);
-                            },
+                          // 图片部分，放在ClipRRect里确保图片有圆角
+                          ClipRRect(
+                            borderRadius:
+                                BorderRadius.circular(6.0), // 确保图片与容器圆角一致
+                            child: Image.asset(
+                              imagePath,
+                              fit: BoxFit.fitWidth, // 保持图片的原始比例
+                              width: widget.sectionHeight * 0.4,
+                              height: widget.sectionHeight * 0.8,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey, // 如果图片加载失败，显示灰色背景
+                                  child: Icon(
+                                    Icons.person,
+                                    size: widget.sectionHeight * 0.4,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                          SizedBox(height: 8.0),
-                          Text(
-                            author.name, // 显示作者名
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                          // 作者名字显示在图片右下角
+                          Positioned(
+                            bottom: 5,
+                            right: -2,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 2.0, vertical: 2.0), // 设置内边距
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5), // 黑色背景
+                                borderRadius:
+                                    BorderRadius.circular(6.0), // 圆角矩形
+                              ),
+                              child: Text(
+                                author.name,
+                                style: TextStyle(
+                                  color: Colors.white, // 白色文字
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis, // 超出显示省略号
+                              ),
                             ),
                           ),
                         ],
