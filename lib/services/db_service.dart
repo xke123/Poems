@@ -1,3 +1,5 @@
+// lib/services/db_service.dart
+
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle, ByteData;
 import 'package:poems/models/collections_model.dart';
@@ -75,11 +77,13 @@ class DbService {
   }
 
   // 获取前30个作者
-  static Future<List<AuthorModel>> getAuthors() async {
+  static Future<List<AuthorModel>> getAuthors(
+      {int limit = 30, int offset = 0}) async {
     try {
       final db = await initDb(); // 初始化数据库
-      List<Map<String, dynamic>> result = await db
-          .rawQuery('SELECT Id, Name FROM author ORDER BY id ASC LIMIT 30');
+      List<Map<String, dynamic>> result = await db.rawQuery(
+          'SELECT Id, Name FROM author ORDER BY id ASC LIMIT ? OFFSET ?',
+          [limit, offset]);
       // print('获取到的作者记录: $result');
       return result.map((map) => AuthorModel.fromMap(map)).toList();
     } catch (e) {
@@ -103,17 +107,35 @@ class DbService {
   }
 
   // 获取30个作品集
-  static Future<List<CollectionModel>> getCollections() async {
+  static Future<List<CollectionModel>> getCollections(
+      {int limit = 30, int offset = 0}) async {
     try {
-      String jsonString =
-          await rootBundle.loadString('assets/database/collections.json');
-      List<dynamic> jsonResponse = json.decode(jsonString);
-      List<CollectionModel> collections =
-          jsonResponse.map((item) => CollectionModel.fromJson(item)).toList();
-      return collections.take(30).toList(); // 获取前30组数据
+      final db = await initDb(); // 初始化数据库
+      List<Map<String, dynamic>> result = await db.rawQuery(
+          'SELECT * FROM collection ORDER BY id ASC LIMIT ? OFFSET ?',
+          [limit, offset]);
+
+      // 显式指定映射类型
+      return result
+          .map<CollectionModel>((map) => CollectionModel.fromMap(map))
+          .toList();
     } catch (e) {
       print('获取诗集数据失败: $e');
       throw Exception('获取诗集数据失败');
     }
+  }
+
+  // 添加获取随机 Collection 数据的静态方法
+  static Future<List<CollectionModel>> getRandomCollections(int limit) async {
+    final db = await initDb(); // 确保调用的是 initDb()
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT * FROM collection
+      ORDER BY RANDOM()
+      LIMIT ?
+    ''', [limit]);
+
+    return List.generate(maps.length, (i) {
+      return CollectionModel.fromMap(maps[i]);
+    });
   }
 }

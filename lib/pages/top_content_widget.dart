@@ -60,18 +60,20 @@ class _TopContentWidgetState extends State<TopContentWidget> {
         return;
       }
 
-      // 3. 从collections.json中随机获取4组数据
-      List<CollectionModel> allCollections =
-          Provider.of<CollectionViewModel>(context, listen: false).collections;
-      if (allCollections.length < 4) {
+      // 3. 从数据库中随机获取4组收藏数据
+      await Provider.of<CollectionViewModel>(context, listen: false)
+          .fetchRandomCollections(4);
+      List<CollectionModel> selectedCollections =
+          Provider.of<CollectionViewModel>(context, listen: false)
+              .randomCollections;
+
+      if (selectedCollections.length < 4) {
         print('收藏数量不足4个');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('收藏数量不足4个')),
         );
         return;
       }
-      List<CollectionModel> selectedCollections =
-          _getRandomItemsFromList(allCollections, 4);
 
       // 4. 将所有数据分为两组，每组包含2个朝代，4个作者，2个收藏
       List<dynamic> newGroup1 = [

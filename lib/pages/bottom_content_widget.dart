@@ -1,9 +1,9 @@
-// bottom_content_widget.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/author_viewmodel.dart';
 import '../models/collections_viewmodel.dart';
+import '../widgets/author_section_pagination.dart';
+import '../widgets/collection_section_pagination.dart';
 
 class BottomContentWidget extends StatelessWidget {
   final double bottomContainerHeight;
@@ -48,16 +48,16 @@ class BottomContentWidget extends StatelessWidget {
                   sectionHeight: sectionHeight, // 自动高度
                 ),
               ),
-              // 作者部分
+              // 作者部分（使用分页组件）
               Expanded(
-                child: AuthorSection(
-                  sectionHeight: sectionHeight, // 传入计算的高度
+                child: AuthorSectionPagination(
+                  sectionHeight: sectionHeight,
                 ),
               ),
-              // 作品集部分
+              // 作品集部分（使用分页组件）
               Expanded(
-                child: CollectionSection(
-                  sectionHeight: sectionHeight, // 传入计算的高度
+                child: CollectionSectionPagination(
+                  sectionHeight: sectionHeight,
                 ),
               ),
               // 文体部分
@@ -74,9 +74,7 @@ class BottomContentWidget extends StatelessWidget {
   }
 }
 
-// 以下是各个部分的组件代码，您可以将它们放在单独的文件中，或者保持在此文件内。
-
-// 朝代部分组件
+// 朝代部分组件保持不变
 class CategorySection extends StatelessWidget {
   final String title;
   final List<String> items;
@@ -164,175 +162,7 @@ class CategorySection extends StatelessWidget {
   }
 }
 
-// 作者部分组件
-class AuthorSection extends StatelessWidget {
-  final double sectionHeight; // 添加 sectionHeight 参数
-
-  AuthorSection({required this.sectionHeight});
-
-  @override
-  Widget build(BuildContext context) {
-    // 计算每个部分的标题和内容的高度
-    final titleHeight = sectionHeight * 0.2; // 标题占20%高度
-    final contentHeight = sectionHeight * 0.8; // 内容占80%高度
-
-    return Consumer<AuthorViewModel>(
-      builder: (context, viewModel, child) {
-        if (viewModel.authors.isEmpty) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题栏部分
-            Container(
-              height: titleHeight,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "作者",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
-              ),
-            ),
-            // 内容栏部分，水平滑动的圆角矩形列表
-            Container(
-              height: contentHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: viewModel.authors.length,
-                itemBuilder: (context, index) {
-                  final author = viewModel.authors[index];
-                  final imagePath =
-                      'assets/images/${author.id}.jpg'; // 根据ID动态加载图片
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Container(
-                      width: contentHeight, // 让宽度与内容高度一致，保持正方形
-                      decoration: BoxDecoration(
-                        color: Colors.grey, // 背景色
-                        borderRadius: BorderRadius.circular(16.0), // 圆角
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            imagePath,
-                            width: contentHeight * 0.6, // 图片大小为内容高度的60%
-                            height: contentHeight * 0.6, // 高度和宽度一致
-                            errorBuilder: (context, error, stackTrace) {
-                              // 如果图片加载失败，显示占位符
-                              return Icon(Icons.person,
-                                  size: contentHeight * 0.6,
-                                  color: Colors.white);
-                            },
-                          ),
-                          Text(
-                            author.name, // 显示作者名
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-// 作品集部分组件
-class CollectionSection extends StatelessWidget {
-  final double sectionHeight; // 添加 sectionHeight 参数
-
-  CollectionSection({required this.sectionHeight});
-
-  @override
-  Widget build(BuildContext context) {
-    // 计算每个部分的标题和内容的高度
-    final titleHeight = sectionHeight * 0.2; // 标题占20%高度
-    final contentHeight = sectionHeight * 0.8; // 内容占80%高度
-
-    return Consumer<CollectionViewModel>(
-      builder: (context, viewModel, child) {
-        if (viewModel.collections.isEmpty) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 标题栏部分
-            Container(
-              height: titleHeight,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "作品集",
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
-              ),
-            ),
-            // 内容栏部分，水平滑动的圆角矩形列表
-            Container(
-              height: contentHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: viewModel.collections.length,
-                itemBuilder: (context, index) {
-                  final collection = viewModel.collections[index];
-                  final color = _getBackgroundColor(collection.kind);
-
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Container(
-                      width: contentHeight * 0.6, // 宽度设为高度的60%
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(16.0),
-                      ),
-                      child: Center(
-                        child: Text(
-                          collection.title,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // 根据 Kind 设置不同的背景颜色
-  Color _getBackgroundColor(String kind) {
-    switch (kind) {
-      case '诗':
-        return Colors.blueAccent;
-      case '词':
-        return Colors.green;
-      case '文':
-        return Colors.redAccent;
-      case '曲':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
-  }
-}
-
-// 文体部分组件
+// 文体部分组件保持不变
 class WenTiSection extends StatelessWidget {
   final List<String> wenTiItems = ['诗', '词', '曲', '赋', '文'];
   final double sectionHeight; // 添加 sectionHeight 参数

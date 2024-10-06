@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'pages/quote_display_page.dart';
 import 'pages/quotes_by_category_page.dart';
 import 'models/author_viewmodel.dart';
+import 'models/collections_viewmodel.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthorViewModel>(
+          create: (_) => AuthorViewModel(),
+        ),
+        ChangeNotifierProvider<CollectionViewModel>(
+          create: (_) => CollectionViewModel(),
+        ),
+        // 其他视图模型可以在这里添加
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

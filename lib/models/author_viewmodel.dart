@@ -4,14 +4,36 @@ import '../models/author_model.dart';
 
 class AuthorViewModel extends ChangeNotifier {
   List<AuthorModel> authors = [];
+  bool isLoading = false;
+  bool hasMore = true;
+  int _limit = 30;
+  int _offset = 0;
 
-  // 获取前30个作者
+  AuthorViewModel() {
+    fetchAuthors();
+  }
+
+  // 获取作者，支持分页
   Future<void> fetchAuthors() async {
+    if (isLoading || !hasMore) return;
+
+    isLoading = true;
+    notifyListeners();
+
     try {
-      authors = await DbService.getAuthors();
+      List<AuthorModel> fetchedAuthors =
+          await DbService.getAuthors(limit: _limit, offset: _offset);
+      if (fetchedAuthors.length < _limit) {
+        hasMore = false;
+      }
+      authors.addAll(fetchedAuthors);
+      _offset += _limit;
       notifyListeners();
     } catch (e) {
       print('fetchAuthors 错误: $e');
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -24,5 +46,14 @@ class AuthorViewModel extends ChangeNotifier {
       print('fetchRandomAuthors 错误: $e');
       return [];
     }
+  }
+
+  // 重置分页
+  void reset() {
+    authors.clear();
+    isLoading = false;
+    hasMore = true;
+    _offset = 0;
+    fetchAuthors();
   }
 }
