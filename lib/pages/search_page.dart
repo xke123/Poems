@@ -39,10 +39,10 @@ class _SearchPageState extends State<SearchPage> {
   ];
 
   // 选项列表
-  final List<String> searchOptions = ['无', '作者', '作品', '作品集'];
+  final List<String> searchOptions = ['无', '作者', '作品名', '诗句', '作品集'];
 
   // 选中的朝代和选项
-  String selectedDynasty = '唐'; // 默认选中“唐”
+  String selectedDynasty = '汉'; // 默认选中“唐”
   String selectedOption = '作品'; // 默认选中“作品”
 
   @override

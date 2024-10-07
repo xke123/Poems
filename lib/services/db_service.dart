@@ -226,4 +226,29 @@ class DbService {
       throw Exception('获取朝代数据失败');
     }
   }
+
+  // 根据作品集标题查询诗词
+  // 查询 poem 表中 Title 包含指定作品集名称的所有作品
+  static Future<List<PoemDetailModel>> getPoemsByCollectionTitle(
+      String collectionTitle) async {
+    try {
+      final db = await initDb(); // 确保数据库已经初始化
+      String symbol = '·'; // 定义特殊符号
+
+      // 查询包含特定作品集名称的诗词，确保作品标题中包含 'collectionTitle' 和 '·'
+      List<Map<String, dynamic>> result = await db.rawQuery(
+        'SELECT * FROM poem WHERE Title LIKE ? AND Title LIKE ?',
+        ['$collectionTitle ·%', '%$symbol%'], // 查询条件：Title以指定作品集名称开头，并且包含 "·"
+      );
+
+      // 打印结果数量
+      print('查询到的作品数量: ${result.length}');
+
+      // 将查询结果转换为 PoemDetailModel 列表并返回
+      return result.map((map) => PoemDetailModel.fromMap(map)).toList();
+    } catch (e) {
+      print('查询诗词失败: $e');
+      throw Exception('查询诗词失败');
+    }
+  }
 }

@@ -6,6 +6,13 @@ import '../models/author_model.dart';
 import '../models/author_viewmodel.dart';
 import '../models/collections_model.dart';
 import '../models/collections_viewmodel.dart';
+import '../pages/detail/dynasty.dart';
+import '../pages/detail/poet.dart';
+import '../pages/detail/collection.dart';
+import '../models/poemdetailmodel.dart';
+import '../models/poetdetail_model.dart';
+import '../services/db_service.dart';
+import '../models/dynastydetailmodel.dart';
 
 // 定义滚动方向枚举
 enum ScrollDirection {
@@ -324,6 +331,7 @@ class _AutoScrollWidgetState extends State<AutoScrollWidget>
 }
 
 // 定义一个新的 Widget 来展示每个分类项
+// 定义一个新的 Widget 来展示每个分类项
 class CategoryItemWidget extends StatelessWidget {
   final dynamic item;
   final double height;
@@ -364,11 +372,23 @@ class CategoryItemWidget extends StatelessWidget {
         color: Colors.transparent, // 透明背景以避免覆盖父背景
         child: InkWell(
           borderRadius: BorderRadius.circular(16.0),
-          onTap: () {
-            // 输出作者信息
-            print('类型为: 作者');
-            print('作者名: ${item.name}');
-            print('作者id: ${item.id}');
+          onTap: () async {
+            // 获取作者详情并跳转
+            try {
+              PoetDetailModel poetDetail =
+                  await DbService.getAuthorById(item.id.toString());
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PoetDetailPage(poetDetail: poetDetail),
+                ),
+              );
+            } catch (e) {
+              print('获取作者数据失败: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('获取作者数据失败: $e')),
+              );
+            }
           },
           child: Container(
             width: this.width,
@@ -442,10 +462,29 @@ class CategoryItemWidget extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
-          onTap: () {
-            // 输出朝代信息
-            print('类型为: 朝代');
-            print('朝代名: $item');
+          onTap: () async {
+            // 获取朝代数据并跳转
+            try {
+              int page = 1;
+              int pageSize = 20; // 可根据需要调整
+              List<DynastyDetailModel> dynastyDetails =
+                  await DbService.getDynastyData(item, page, pageSize);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DynastyDetailPage(
+                    dynasty: item,
+                    dynastyDetails: dynastyDetails,
+                  ),
+                ),
+              );
+            } catch (e) {
+              print('获取朝代数据失败: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('获取朝代数据失败: $e')),
+              );
+            }
           },
           child: Container(
             width: this.width,
@@ -488,7 +527,7 @@ class CategoryItemWidget extends StatelessWidget {
                       displayText,
                       style: TextStyle(
                         color: const Color.fromARGB(255, 240, 240, 240), // 白色字体
-                        fontSize: 18, // 字体大小设为16
+                        fontSize: 18, // 字体大小设为18
                         fontWeight: FontWeight.bold,
                         shadows: [
                           Shadow(
@@ -511,16 +550,33 @@ class CategoryItemWidget extends StatelessWidget {
       );
     }
 
+    // 处理作品集的样式
     if (item is CollectionModel) {
       return Material(
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16.0),
-          onTap: () {
-            // 输出作品集信息
-            print('类型为: 作品集');
-            print('作品集名: ${item.title}');
-            print('作品集id: ${item.id}');
+          onTap: () async {
+            // 获取作品集数据并跳转
+            try {
+              List<PoemDetailModel> poems =
+                  await DbService.getPoemsByCollectionTitle(item.title);
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CollectionDetailPage(
+                    collectionTitle: item.title,
+                    poems: poems,
+                  ),
+                ),
+              );
+            } catch (e) {
+              print('获取作品集数据失败: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('获取作品集数据失败: $e')),
+              );
+            }
           },
           child: Container(
             width: this.width,
@@ -591,7 +647,7 @@ class CategoryItemWidget extends StatelessWidget {
       );
     }
 
-    // Collection 和 朝代的默认样式
+    // 默认样式（未知类型）
     return Material(
       color: Colors.transparent,
       child: InkWell(

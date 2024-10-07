@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/collections_viewmodel.dart';
 import '../models/collections_model.dart';
+import '../services/db_service.dart'; // 引入数据库服务
+import '../models/poemdetailmodel.dart';
+import '../pages/detail/collection.dart';
 
 class CollectionSectionPagination extends StatefulWidget {
   final double sectionHeight;
@@ -43,6 +46,34 @@ class _CollectionSectionPaginationState
     super.dispose();
   }
 
+  // 添加点击事件，查询数据库中包含特定作品集名称的诗词
+  Future<void> _fetchPoemsByCollection(String collectionTitle) async {
+    try {
+      // 调用数据库服务，查询 poem 表中 Title 包含指定作品集名称的作品
+      List<PoemDetailModel> poems =
+          await DbService.getPoemsByCollectionTitle(collectionTitle);
+
+      // 输出查询结果到控制台
+      print('查询到的作品数量: ${poems.length}');
+      for (var poem in poems) {
+        print('作品标题: ${poem.title}, 作者: ${poem.author}');
+      }
+
+      // 跳转到作品集详情页，传递查询到的作品数据
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CollectionDetailPage(
+            collectionTitle: collectionTitle,
+            poems: poems, // 传递查询结果
+          ),
+        ),
+      );
+    } catch (e) {
+      print('查询失败: $e');
+    }
+  }
+
   Color _getBackgroundColor(String kind) {
     switch (kind) {
       case '诗':
@@ -77,7 +108,6 @@ class _CollectionSectionPaginationState
             Container(
               height: widget.sectionHeight * 0.2,
               alignment: Alignment.centerLeft,
-              // padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: RichText(
                 text: TextSpan(
                   text: "作品集: ", // 前面的文字
@@ -138,7 +168,6 @@ class _CollectionSectionPaginationState
                     viewModel.collections.length + (viewModel.hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == viewModel.collections.length) {
-                    // 显示加载指示器
                     if (viewModel.errorMessage != null) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -159,47 +188,53 @@ class _CollectionSectionPaginationState
                   return Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8.0, vertical: 10.0),
-                    child: Stack(
-                      children: [
-                        // 背景颜色的容器
-                        Container(
-                          width: widget.sectionHeight * 0.4, // 宽度设为高度的48%
-                          decoration: BoxDecoration(
-                            color: color,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 6,
-                                spreadRadius: 2,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // 竖排文字显示在右上角，带有白色底色
-                        Positioned(
-                          top: 8.0,
-                          right: 8.0,
-                          child: Container(
-                            color: Colors.white, // 白色背景
-                            padding: EdgeInsets.all(1.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min, // 根据内容高度最小化
-                              children: collection.title
-                                  .split('') // 将标题逐字分割
-                                  .map((char) => Text(
-                                        char,
-                                        style: TextStyle(
-                                          color: Colors.black, // 黑色字体
-                                          fontSize: 10,
-                                          height: 1.1, // 调整字符间距，值越小间距越紧凑
-                                        ),
-                                      ))
-                                  .toList(),
+                    child: GestureDetector(
+                      onTap: () {
+                        // 点击作品集后，触发查询事件并导航
+                        _fetchPoemsByCollection(collection.title);
+                      },
+                      child: Stack(
+                        children: [
+                          // 背景颜色的容器
+                          Container(
+                            width: widget.sectionHeight * 0.4,
+                            decoration: BoxDecoration(
+                              color: color,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 6,
+                                  spreadRadius: 2,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                          // 竖排文字显示在右上角，带有白色底色
+                          Positioned(
+                            top: 8.0,
+                            right: 8.0,
+                            child: Container(
+                              color: Colors.white,
+                              padding: EdgeInsets.all(1.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: collection.title
+                                    .split('')
+                                    .map((char) => Text(
+                                          char,
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 10,
+                                            height: 1.1,
+                                          ),
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
