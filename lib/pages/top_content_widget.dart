@@ -456,7 +456,7 @@ class CategoryItemWidget extends StatelessWidget {
       );
     }
 
-    // 处理朝代的样式，显示dynasty_icon.png，并调整文字大小为16
+    // 处理朝代的样式，显示dynasty_icon.png
     if (item is String && imagePath != null) {
       return Material(
         color: Colors.transparent,
@@ -507,7 +507,7 @@ class CategoryItemWidget extends StatelessWidget {
                   // 背景图片填充整个圆角矩形
                   Positioned.fill(
                     child: Image.asset(
-                      imagePath,
+                      'assets/image/dynasty-icon/$item.png', // 动态加载朝代图片
                       fit: BoxFit.cover, // 确保图片充满容器
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
@@ -521,27 +521,7 @@ class CategoryItemWidget extends StatelessWidget {
                       },
                     ),
                   ),
-                  // 中心浮动的文字
-                  Center(
-                    child: Text(
-                      displayText,
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 240, 240, 240), // 白色字体
-                        fontSize: 18, // 字体大小设为18
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 5,
-                            color: Colors.black.withOpacity(0.5), // 阴影提升可读性
-                            offset: Offset(1, 1),
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis, // 超出一行显示省略号
-                    ),
-                  ),
+                  // 去掉了文字部分
                 ],
               ),
             ),

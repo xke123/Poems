@@ -37,3 +37,6 @@ flutter:
     - assets/images/
     - assets/database/collections.json
     - assets/image/
+    - assets/dynasty/
+    - assets/dynasty/dynasty-icon/
+    - assets/image/dynasty-icon/

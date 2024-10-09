@@ -66,7 +66,7 @@ class BottomContentWidget extends StatelessWidget {
               // 文体部分
               Expanded(
                 child: WenTiSection(
-                  sectionHeight: sectionHeight, // 传入计算的高度
+                  sectionHeight: sectionHeight * 0.95, // 传入计算的高度
                 ),
               ),
             ],
@@ -117,7 +117,7 @@ class CategorySection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: items.length,
             itemBuilder: (context, index) {
-              final String dynasty = items[index]; // 当前朝代
+              final String dynasty = items[index]; // 当前朝代名称
 
               return Padding(
                 padding:
@@ -145,40 +145,46 @@ class CategorySection extends StatelessWidget {
                     // 下一页数据
                     page++;
                   },
-                  child: Container(
-                    width: contentHeight * 0.8, // 高度和宽度一致，保持正方形
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/image/dynasty_icon.png'),
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius: BorderRadius.circular(4.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 6,
-                          spreadRadius: 2,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        dynasty,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              blurRadius: 3,
-                              color: Colors.black.withOpacity(0.7),
-                              offset: Offset(1, 1),
+                  child: Stack(
+                    clipBehavior: Clip.none, // 允许溢出以显示阴影
+                    children: [
+                      // 白色圆角矩形，位于底层并带阴影
+                      Container(
+                        width: contentHeight * 0.8, // 设置为正方形
+                        height: contentHeight * 0.8,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.2), // 白色背景
+                          borderRadius: BorderRadius.circular(16.0), // 圆角效果
+                          // 添加阴影
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 6,
+                              spreadRadius: 2,
+                              offset: Offset(0, 3), // 阴影效果
                             ),
                           ],
                         ),
                       ),
-                    ),
+                      // 图片，位于前层
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: Container(
+                          width: contentHeight * 0.8, // 图片保持正方形
+                          height: contentHeight * 0.8,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage(
+                                  'assets/image/dynasty-icon/$dynasty.png'), // 动态加载图片
+                              fit: BoxFit.cover, // 图片覆盖整个区域
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(16.0), // 图片的圆角效果与白色背景保持一致
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
