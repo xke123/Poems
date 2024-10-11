@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:poems/models/dynastydetailmodel.dart';
 import 'package:poems/services/db_service.dart';
+import 'poem.dart';
+import 'poet.dart';
+import '../../models/poemdetailmodel.dart';
+import '../../models/poetdetail_model.dart';
 
-class DynastyDetailPage extends StatelessWidget {
+class DynastyDetailPage extends StatefulWidget {
   final String dynasty;
   final List<DynastyDetailModel> dynastyDetails;
 
@@ -12,24 +16,122 @@ class DynastyDetailPage extends StatelessWidget {
   });
 
   @override
+  _DynastyDetailPageState createState() => _DynastyDetailPageState();
+}
+
+class _DynastyDetailPageState extends State<DynastyDetailPage> {
+  List<DynastyDetailModel> authors = [];
+  List<DynastyDetailModel> poems = [];
+  int authorPage = 1;
+  int poemPage = 1;
+  bool isLoadingAuthors = false;
+  bool isLoadingPoems = false;
+
+  final ScrollController _authorScrollController = ScrollController();
+  final ScrollController _poemScrollController = ScrollController();
+
+ @override
+void initState() {
+  super.initState();
+  authors = widget.dynastyDetails
+      .where((detail) => detail.authorId != null)
+      .toList();
+  poems = widget.dynastyDetails
+      .where((detail) => detail.poemId != null)
+      .toList();
+
+  // 监听滚动事件
+  _authorScrollController.addListener(_loadMoreAuthors);
+  _poemScrollController.addListener(_loadMorePoems);
+}
+
+
+  @override
+  void dispose() {
+    _authorScrollController.dispose();
+    _poemScrollController.dispose();
+    super.dispose();
+  }
+
+ Future<void> _loadMoreAuthors() async {
+  if (_authorScrollController.position.pixels ==
+      _authorScrollController.position.maxScrollExtent) {
+    if (!isLoadingAuthors) {
+      setState(() {
+        isLoadingAuthors = true;
+      });
+
+      try {
+        // 调用单独获取作者数据的方法
+        List<DynastyDetailModel> newAuthors =
+            await DbService.getDynastyAuthors(widget.dynasty, ++authorPage, 30);
+
+        print('加载到的新的作者数据: ${newAuthors.length} 条');
+        newAuthors.forEach((author) {
+          print(author); // 打印每一个新获取的作者数据
+        });
+
+        setState(() {
+          authors.addAll(newAuthors);
+          isLoadingAuthors = false;
+        });
+      } catch (e) {
+        print('加载作者失败: $e');
+        setState(() {
+          isLoadingAuthors = false;
+        });
+      }
+    }
+  }
+}
+
+Future<void> _loadMorePoems() async {
+  if (_poemScrollController.position.pixels ==
+      _poemScrollController.position.maxScrollExtent) {
+    if (!isLoadingPoems) {
+      setState(() {
+        isLoadingPoems = true;
+      });
+
+      try {
+        // 调用单独获取作品数据的方法
+        List<DynastyDetailModel> newPoems =
+            await DbService.getDynastyPoems(widget.dynasty, ++poemPage, 30);
+
+        print('加载到的新的诗词数据: ${newPoems.length} 条');
+        newPoems.forEach((poem) {
+          print(poem); // 打印每一个新获取的诗词数据
+        });
+
+        setState(() {
+          poems.addAll(newPoems);
+          isLoadingPoems = false;
+        });
+      } catch (e) {
+        print('加载作品失败: $e');
+        setState(() {
+          isLoadingPoems = false;
+        });
+      }
+    }
+  }
+}
+
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('$dynasty 朝'),
+        title: Text('${widget.dynasty} 朝'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 第一部分：显示图片
             _buildDynastyImage(),
             SizedBox(height: 20),
-
-            // 第二部分：作者横向滚动列表
             _buildAuthorList(),
-
-            // 第三部分：作品滚动列表
             Expanded(
               child: _buildPoemList(),
             ),
@@ -40,10 +142,9 @@ class DynastyDetailPage extends StatelessWidget {
   }
 
   Widget _buildDynastyImage() {
-    final String imagePath = 'assets/dynasty/$dynasty-img.png';
-
+    final String imagePath = 'assets/dynasty/${widget.dynasty}-img.png';
     return Container(
-      height: 200, // 你可以根据需要调整高度
+      height: 200,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
@@ -56,66 +157,55 @@ class DynastyDetailPage extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12.0), // 确保图片圆角
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.0), // 圆角
-          ),
-          child: Center(
-            // 使用 Center 确保 Image 居中显示
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.cover, // 使图片按照原比例显示
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey,
-                  child: Center(
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: Colors.white,
-                      size: 50,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+        borderRadius: BorderRadius.circular(12.0),
+        child: Image.asset(
+          imagePath,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: Colors.grey,
+              child: Center(
+                child: Icon(
+                  Icons.image_not_supported,
+                  color: Colors.white,
+                  size: 50,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  // 第二部分：作者横向滚动列表
   Widget _buildAuthorList() {
-    final List<DynastyDetailModel> authors =
-        dynastyDetails.where((detail) => detail.authorId != null).toList();
-
-    if (authors.isEmpty) {
-      print('没有作者数据');
-      return SizedBox(); // 如果没有作者结果，则返回空组件
-    }
-
     return Container(
       height: 90,
       child: ListView.builder(
+        controller: _authorScrollController,
         scrollDirection: Axis.horizontal,
         itemCount: authors.length,
         itemBuilder: (context, index) {
           final author = authors[index];
-
-          // 打印作者详细信息进行调试
-          print(
-              '++++页面显示作者: ${author.authorName}, Id: ${author.authorId}, HasImage: ${author.hasImage}');
-
-          // 获取图片路径
           final String imagePath = 'assets/images/${author.authorId}.jpg';
-
           return Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0),
             child: GestureDetector(
-              onTap: () {
-                // 点击作者时的逻辑，可以跳转到详情页
+              onTap: () async {
+                try {
+                  PoetDetailModel authorDetail =
+                      await DbService.getAuthorById(author.authorId!);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PoetDetailPage(poetDetail: authorDetail),
+                    ),
+                  );
+                } catch (e) {
+                  print('获取作者详情失败: $e');
+                }
               },
               child: Container(
                 width: 60,
@@ -132,7 +222,7 @@ class DynastyDetailPage extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    // 根据hasImage字段决定显示图片还是图标
+                    // 作者图片
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6.0),
                       child: author.hasImage
@@ -163,26 +253,27 @@ class DynastyDetailPage extends StatelessWidget {
                               ),
                             ),
                     ),
-                    // 名字部分
+                    // 作者名字
                     Positioned(
-                      bottom: 5,
-                      right: -2,
+                      bottom: 5, // 距离底部的距离
+                      right: 5, // 距离右侧的距离
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 2.0, vertical: 2.0),
+                          horizontal: 4.0,
+                          vertical: 2.0,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(6.0),
+                          color: Colors.black.withOpacity(0.6), // 半透明黑色背景
+                          borderRadius: BorderRadius.circular(8.0), // 圆角背景
                         ),
                         child: Text(
-                          author.authorName ?? '未知作者',
+                          author.authorName ?? '未知作者', // 显示作者名字
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.normal,
+                            fontSize: 10, // 设置字体大小
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1, // 限制为单行显示
+                          overflow: TextOverflow.ellipsis, // 溢出时显示省略号
                         ),
                       ),
                     ),
@@ -196,28 +287,34 @@ class DynastyDetailPage extends StatelessWidget {
     );
   }
 
-  // 第三部分：作品滚动列表
   Widget _buildPoemList() {
-    final List<DynastyDetailModel> poems =
-        dynastyDetails.where((detail) => detail.poemId != null).toList();
-    if (poems.isEmpty) return SizedBox(); // 如果没有作品结果，则返回空组件
-
     return ListView.builder(
+      controller: _poemScrollController,
       itemCount: poems.length,
       itemBuilder: (context, index) {
         final poem = poems[index];
-
         return Column(
           children: [
-            if (index != 0)
-              Divider(height: 1, color: Colors.grey), // 每个项的分隔线，排除第一个项
+            if (index != 0) Divider(height: 1, color: Colors.grey),
             Container(
-              height: 60, // 设置每个列表项的高度
+              height: 60,
               child: ListTile(
                 title: Text(poem.poemTitle ?? '未知作品'),
                 subtitle: Text('作者: ${poem.poemAuthor ?? '未知'}'),
-                onTap: () {
-                  // 点击事件逻辑
+                onTap: () async {
+                  try {
+                    PoemDetailModel poemDetail =
+                        await DbService.getQuoteById(poem.poemId!);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PoemDetailPage(poemDetail: poemDetail),
+                      ),
+                    );
+                  } catch (e) {
+                    print('获取作品详情失败: $e');
+                  }
                 },
               ),
             ),

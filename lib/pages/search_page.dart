@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import '../services/search_service.dart';
 import 'search/authorResult.dart';
 import '../models/search/author.dart';
+import '../models/poemdetailmodel.dart';
+import '../pages/search/pemResult.dart';
+import '../pages/search/collectionResult.dart';
+import '../pages/search/poemLineResult.dart';
+import '../pages/search/authorResult.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -42,8 +47,8 @@ class _SearchPageState extends State<SearchPage> {
   final List<String> searchOptions = ['无', '作者', '作品名', '诗句', '作品集'];
 
   // 选中的朝代和选项
-  String selectedDynasty = '汉'; // 默认选中“唐”
-  String selectedOption = '作品'; // 默认选中“作品”
+  String selectedDynasty = '汉'; // 默认选中“汉”
+  String selectedOption = '作品名'; // 默认选中“作品名”
 
   @override
   void dispose() {
@@ -61,65 +66,99 @@ class _SearchPageState extends State<SearchPage> {
 
   // 搜索方法
   void _performSearch() async {
-    String query = _searchController.text.trim();
-    print('搜索内容: $query');
-    print('选中的朝代: $selectedDynasty');
-    print('选中的选项: $selectedOption');
-
-    try {
-      // 调用搜索服务
-      List<dynamic> results = await SearchService.search(
-        query: query,
-        dynasty: selectedDynasty,
-        option: selectedOption,
-        limit: 30,
-        offset: 0,
-      );
-
-      // 输出搜索结果数量
-      print('搜索结果数量: ${results.length}');
-
-      // 根据搜索选项跳转到不同的结果页面
-      if (selectedOption == '作者') {
-        // 跳转到 AuthorResultPage
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AuthorResultPage(
-              searchQuery: query,
-              dynasty: selectedDynasty,
-              authorResults: results
-                  .where((result) =>
-                      result is AuthorPoemModel && result.authorId != null)
-                  .toList()
-                  .cast<AuthorPoemModel>(),
-              poemResults: results
-                  .where((result) =>
-                      result is AuthorPoemModel && result.poemId != null)
-                  .toList()
-                  .cast<AuthorPoemModel>(),
-            ),
-          ),
-        );
-      }
-      // else if (selectedOption == '作品') {
-      //   // 这里跳转到一个作品结果页面，你可以类似地创建一个作品结果页面
-      //   Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) => PoemResultPage(
-      //         searchQuery: query,
-      //         dynasty: selectedDynasty,
-      //         poemResults: results.cast<PoemDetailModel>(), // 这里的类型转换取决于作品结果
-      //       ),
-      //     ),
-      //   );
-      // }
-      // 可以继续添加其他选项的页面，比如作品集和名句
-    } catch (e) {
-      print('搜索出现错误: $e');
-    }
+  String query = _searchController.text.trim();
+  if (query.isEmpty) {
+    // 显示提示信息
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('请输入搜索内容')),
+    );
+    return;
   }
+  print('搜索内容: $query');
+  print('选中的朝代: $selectedDynasty');
+  print('选中的选项: $selectedOption');
+
+  try {
+    // 调用搜索服务
+    List<dynamic> results = await SearchService.search(
+      query: query,
+      dynasty: selectedDynasty,
+      option: selectedOption,
+      limit: 30,
+      offset: 0,
+    );
+
+    // 输出搜索结果数量
+    print('搜索结果数量: ${results.length}');
+
+    // 根据搜索选项跳转到不同的结果页面
+    if (selectedOption == '作者') {
+      // 跳转到 AuthorResultPage
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AuthorResultPage(
+            searchQuery: query,
+            dynasty: selectedDynasty,
+            authorResults: results
+                .where((result) =>
+                    result is AuthorPoemModel && result.authorId != null)
+                .toList()
+                .cast<AuthorPoemModel>(),
+            poemResults: results
+                .where((result) =>
+                    result is AuthorPoemModel && result.poemId != null)
+                .toList()
+                .cast<AuthorPoemModel>(),
+          ),
+        ),
+      );
+    } else if (selectedOption == '作品名' ) {
+      // 跳转到 PoemResultPage
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PoemResultPage(
+            searchQuery: query,
+            dynasty: selectedDynasty,
+            poemResults: results.cast<PoemDetailModel>(),
+          ),
+        ),
+      );
+    }  else if (selectedOption == '诗句') {
+      // 跳转到 PoemLineResultPage
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PoemLineResultPage(
+            searchQuery: query,
+            dynasty: selectedDynasty,
+            poemResults: results.cast<PoemDetailModel>(),
+          ),
+        ),
+      );
+    } else if (selectedOption == '作品集') {
+      // 跳转到 CollectionResultPage
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CollectionResultPage(
+            searchQuery: query,
+            dynasty: selectedDynasty,
+            poemResults: results.cast<PoemDetailModel>(),
+          ),
+        ),
+      );
+    }
+    // 可以继续添加其他选项的页面，比如名句
+  } catch (e) {
+    print('搜索出现错误: $e');
+    // 显示错误提示
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('搜索出现错误: ${e.toString()}')),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +183,8 @@ class _SearchPageState extends State<SearchPage> {
                     0.8,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(_isSearchBoxTapped ? 0 : 20),
+              borderRadius:
+                  BorderRadius.circular(_isSearchBoxTapped ? 0 : 20),
               // border: Border.all(color: Colors.grey, width: 1), // 添加边框
               boxShadow: [
                 BoxShadow(
@@ -190,7 +230,8 @@ class _SearchPageState extends State<SearchPage> {
                     // 第一行：朝代选择
                     SizedBox(height: 20),
                     Container(
-                      width: MediaQuery.of(context).size.width * 0.9, // 占页面90%
+                      width: MediaQuery.of(context).size.width *
+                          0.9, // 占页面90%
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -235,7 +276,8 @@ class _SearchPageState extends State<SearchPage> {
                     // 第二行：选项选择
                     SizedBox(height: 10),
                     Container(
-                      width: MediaQuery.of(context).size.width * 0.8, // 占页面80%
+                      width: MediaQuery.of(context).size.width *
+                          0.8, // 占页面80%
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
