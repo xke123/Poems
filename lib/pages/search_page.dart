@@ -9,6 +9,8 @@ import '../pages/search/pemResult.dart';
 import '../pages/search/collectionResult.dart';
 import '../pages/search/poemLineResult.dart';
 import '../pages/search/authorResult.dart';
+import '../pages/search/globalResult.dart';
+import '../models/search/GlobalSearchResult.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -92,7 +94,21 @@ class _SearchPageState extends State<SearchPage> {
     print('搜索结果数量: ${results.length}');
 
     // 根据搜索选项跳转到不同的结果页面
-    if (selectedOption == '作者') {
+    if (selectedOption == '无') {
+      List<GlobalSearchResult> globalResults = results.cast<GlobalSearchResult>();
+        // 跳转到 GlobalResultPage
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => GlobalResultPage(
+              searchQuery: query,
+              dynasty: selectedDynasty,
+              results: globalResults,
+            ),
+          ),
+        );
+      }
+    else if (selectedOption == '作者') {
       // 跳转到 AuthorResultPage
       Navigator.push(
         context,
