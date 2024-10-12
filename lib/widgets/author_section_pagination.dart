@@ -75,7 +75,7 @@ class _AuthorSectionPaginationState extends State<AuthorSectionPagination> {
             ),
             // 内容栏部分，水平滑动的圆角矩形列表
             Container(
-              height: widget.sectionHeight * 0.5,
+              height: widget.sectionHeight * 0.7,
               child: ListView.builder(
                 controller: _scrollController,
                 scrollDirection: Axis.horizontal,
