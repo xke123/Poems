@@ -6,6 +6,10 @@ import '../../models/collections_viewmodel.dart';
 import '../../widgets/author_horizontal_list.dart'; // 新建的作者横向列表组件
 import '../../widgets/collection_horizontal_list.dart';
 import '../../models/search/PoemData.dart';
+import '../../models/search/SentenceData.dart';
+import '../../models/poemdetailmodel.dart';
+import '../../services/db_service.dart';
+import '../../pages/detail/poem.dart';
 
 class GlobalResultPage extends StatelessWidget {
   final String searchQuery;
@@ -46,7 +50,7 @@ class GlobalResultPage extends StatelessWidget {
       body: Center(
         child: Container(
           width: screenWidth * 0.9, // 占用90%的宽度
-          height: screenHeight * 0.9, // 占用90%的高度
+          height: screenHeight * 0.87, // 占用90%的高度
           decoration: BoxDecoration(
             color: Colors.white, // 白色背景
             borderRadius: BorderRadius.circular(20.0), // 圆角
@@ -139,66 +143,76 @@ class GlobalResultPage extends StatelessWidget {
 
   /// 构建ListView的方法，根据结果类型显示不同内容
   Widget buildListView(List<GlobalSearchResult> results, BuildContext context) {
-    if (results.isEmpty) {
-      return Center(child: Text('暂无数据'));
-    }
+  if (results.isEmpty) {
+    return Center(child: Text('暂无数据'));
+  }
 
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final result = results[index];
+  return ListView.builder(
+    itemCount: results.length,
+    itemBuilder: (context, index) {
+      final result = results[index];
 
-        // 根据类型构建不同的显示
-        Widget titleWidget;
-        Widget subtitleWidget;
-
-        switch (result.type) {
-          case 'poem':
-            return buildPoemListItem(result.poemData!);
-          case 'sentence':
-            return buildSentenceListItem(result.poemData!, searchQuery);
-          case 'collection1':
-            return buildPoemListItem(result.poemData!);
-          case 'famous_sentence':
-            return buildSentenceListItem(result.poemData!, searchQuery);
-          default:
-            titleWidget = Text(
-              '未知类型',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            );
-            subtitleWidget = Text('');
-        }
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-          child: ListTile(
-            title: titleWidget,
-            subtitle: subtitleWidget,
-            isThreeLine: true,
-            onTap: () {
-              // 根据类型跳转到不同的详情页面
-              if (result.type == 'poem') {
+      switch (result.type) {
+        case 'poem':
+        case 'sentence':
+        case 'collection1':
+          // 这三种类型的数据都来自 poem 表
+          return GestureDetector(
+            onTap: () async {
+              String poemId = result.poemData!.id;
+              try {
+                // 从数据库获取诗词详情
+                PoemDetailModel poemDetail =
+                    await DbService.getQuoteById(poemId);
                 // 跳转到诗词详情页面
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => PoemDetailPage(poemData: result.poemData!)));
-              } else if (result.type == 'sentence') {
-                // 跳转到名句详情页面
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => SentenceDetailPage(sentenceData: result.sentenceData!)));
-              } else if (result.type == 'collection1') {
-                // 跳转到作品集1详情页面
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => Collection1DetailPage(collection1Data: result.poemData!)));
-              } else if (result.type == 'famous_sentence') {
-                // 跳转到名句详情页面
-                // Navigator.push(context, MaterialPageRoute(builder: (context) => FamousSentenceDetailPage(sentenceData: result.sentenceData!)));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        PoemDetailPage(poemDetail: poemDetail),
+                  ),
+                );
+              } catch (e) {
+                print('获取诗词详情失败: $e');
               }
             },
-          ),
-        );
-      },
-    );
-  }
+            child: result.type == 'sentence'
+                ? buildSentenceListItem(result.poemData!, searchQuery)
+                : buildPoemListItem(result.poemData!),
+          );
+        case 'famous_sentence':
+          // 名句类型的数据需要从 sentenceData 中获取 poetryId
+          return GestureDetector(
+            onTap: () async {
+              String poemId = result.sentenceData!.poetryId;
+              try {
+                // 从数据库获取诗词详情
+                PoemDetailModel poemDetail =
+                    await DbService.getQuoteById(poemId);
+                // 跳转到诗词详情页面
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        PoemDetailPage(poemDetail: poemDetail),
+                  ),
+                );
+              } catch (e) {
+                print('获取诗词详情失败: $e');
+              }
+            },
+            child: buildFamousSentenceListItem(result.sentenceData!),
+          );
+        default:
+          return ListTile(
+            title: Text('未知类型'),
+            subtitle: Text(''),
+          );
+      }
+    },
+  );
+}
+
 
   Widget buildPoemListItem(PoemData poem) {
   return Container(
@@ -316,6 +330,58 @@ Widget buildSentenceListItem(PoemData poem, String query) {
         // 第三行：作者名
         Text(
           poem.author,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+          textAlign: TextAlign.right,
+        ),
+      ],
+    ),
+  );
+}
+
+Widget buildFamousSentenceListItem(SentenceData sentence) {
+  return Container(
+    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+    padding: EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10), // 圆角矩形
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.5),
+          spreadRadius: 2,
+          blurRadius: 5,
+          offset: Offset(0, 3), // 阴影位置
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // 第一行：作品名
+        Text(
+          sentence.poetryName,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+          textAlign: TextAlign.left,
+        ),
+        SizedBox(height: 5),
+        // 第二行：名句内容
+        Text(
+          sentence.content,
+          style: TextStyle(
+            fontSize: 16,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 5),
+        // 第三行：作者名
+        Text(
+          sentence.poetName,
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey,
