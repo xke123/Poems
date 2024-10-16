@@ -8,9 +8,73 @@ import '../models/search/AuthorData.dart';
 import '../models/search/CollectionData.dart';
 import '../models/search/PoemData.dart';
 import '../models/search/SentenceData.dart';
-
+import '../models/author_model.dart';
 
 class SearchService {
+  /// 分页搜索作者
+  static Future<List<AuthorModel>> searchAuthors({
+    required String query,
+    required String dynasty,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final db = await DbService.initDb();
+
+    query = query.trim();
+    if (query.isEmpty) {
+      throw Exception('查询内容不能为空');
+    }
+
+    String sql = 'SELECT * FROM author WHERE Name LIKE ?';
+    List<dynamic> params = ['%$query%'];
+
+    if (dynasty != '无') {
+      sql += ' AND Dynasty = ?';
+      params.add(dynasty);
+    }
+
+    sql += ' ORDER BY id ASC LIMIT ? OFFSET ?';
+    params.addAll([limit, offset]);
+
+    List<Map<String, dynamic>> result = await db.rawQuery(sql, params);
+    print('分页搜索作者，SQL：$sql，参数：$params');
+    print('搜索结果：$result');
+
+    return result.map((map) => AuthorModel.fromMap(map)).toList();
+  }
+
+  /// 分页搜索作品（按查询内容）
+  static Future<List<PoemDetailModel>> searchPoems({
+    required String query,
+    required String dynasty,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final db = await DbService.initDb();
+
+    query = query.trim();
+    if (query.isEmpty) {
+      throw Exception('查询内容不能为空');
+    }
+
+    String sql = 'SELECT * FROM poem WHERE Title LIKE ? OR Content LIKE ?';
+    List<dynamic> params = ['%$query%', '%$query%'];
+
+    if (dynasty != '无') {
+      sql += ' AND Dynasty = ?';
+      params.add(dynasty);
+    }
+
+    sql += ' ORDER BY id ASC LIMIT ? OFFSET ?';
+    params.addAll([limit, offset]);
+
+    List<Map<String, dynamic>> result = await db.rawQuery(sql, params);
+    print('分页搜索作品，SQL：$sql，参数：$params');
+    print('搜索结果：$result');
+
+    return result.map((map) => PoemDetailModel.fromMap(map)).toList();
+  }
+
   // 搜索方法
   static Future<List<dynamic>> search({
     required String query,
@@ -133,86 +197,114 @@ class SearchService {
 
       // 返回 PoemDetailModel 列表
       return result.map((map) => PoemDetailModel.fromMap(map)).toList();
-    } 
-else {
+    } else if (option == '名句') {
+      // 查询名句（sentence 表）
+      sql =
+          'SELECT * FROM sentence WHERE content LIKE ?$dynastyCondition LIMIT ? OFFSET ?';
+      params.clear();
+      params.insert(0, '%$query%');
+      if (dynasty != '无') {
+        params.add(dynasty);
+      }
+      params.addAll([limit, offset]);
+
+      result = await db.rawQuery(sql, params);
+      print('搜索名句，SQL：$sql，参数：$params');
+      print('搜索结果：$result');
+
+      // 返回 SentenceData 列表
+      return result.map((map) => SentenceData.fromMap(map)).toList();
+    } else {
       // 全局搜索
       List<GlobalSearchResult> results = [];
 
 // 搜索作者表
-String authorSql = 'SELECT * FROM author WHERE Name LIKE ? LIMIT ? OFFSET ?';
-List<dynamic> authorParams = ['%$query%', limit, offset];
-List<Map<String, dynamic>> authorResult = await db.rawQuery(authorSql, authorParams);
-print('作者查询结果：$authorResult');
+      String authorSql =
+          'SELECT * FROM author WHERE Name LIKE ? LIMIT ? OFFSET ?';
+      List<dynamic> authorParams = ['%$query%', limit, offset];
+      List<Map<String, dynamic>> authorResult =
+          await db.rawQuery(authorSql, authorParams);
+      print('作者查询结果：$authorResult');
 
-for (var map in authorResult) {
-  AuthorData authorData = AuthorData.fromMap(map);
-  results.add(GlobalSearchResult.author(authorData));
-}
+      for (var map in authorResult) {
+        AuthorData authorData = AuthorData.fromMap(map);
+        results.add(GlobalSearchResult.author(authorData));
+      }
 
 // 搜索诗词标题
-String poemTitleSql = 'SELECT * FROM poem WHERE Title LIKE ?$dynastyCondition LIMIT ? OFFSET ?';
-List<dynamic> poemTitleParams = ['%$query%', ...params, limit, offset];
-List<Map<String, dynamic>> poemTitleResult = await db.rawQuery(poemTitleSql, poemTitleParams);
-print('诗词标题查询结果：$poemTitleResult');
+      String poemTitleSql =
+          'SELECT * FROM poem WHERE Title LIKE ?$dynastyCondition LIMIT ? OFFSET ?';
+      List<dynamic> poemTitleParams = ['%$query%', ...params, limit, offset];
+      List<Map<String, dynamic>> poemTitleResult =
+          await db.rawQuery(poemTitleSql, poemTitleParams);
+      print('诗词标题查询结果：$poemTitleResult');
 
-for (var map in poemTitleResult) {
-  PoemData poemData = PoemData.fromMap(map);
-  results.add(GlobalSearchResult.poem(poemData));
-}
+      for (var map in poemTitleResult) {
+        PoemData poemData = PoemData.fromMap(map);
+        results.add(GlobalSearchResult.poem(poemData));
+      }
 
 // 搜索诗句
-String poemContentSql = 'SELECT * FROM poem WHERE Content LIKE ?$dynastyCondition LIMIT ? OFFSET ?';
-List<dynamic> poemContentParams = ['%$query%', ...params, limit, offset];
-List<Map<String, dynamic>> poemContentResult = await db.rawQuery(poemContentSql, poemContentParams);
-print('诗句查询结果：$poemContentResult');
+      String poemContentSql =
+          'SELECT * FROM poem WHERE Content LIKE ?$dynastyCondition LIMIT ? OFFSET ?';
+      List<dynamic> poemContentParams = ['%$query%', ...params, limit, offset];
+      List<Map<String, dynamic>> poemContentResult =
+          await db.rawQuery(poemContentSql, poemContentParams);
+      print('诗句查询结果：$poemContentResult');
 
-for (var map in poemContentResult) {
-  PoemData poemData = PoemData.fromMap(map);
-  results.add(GlobalSearchResult.sentence(poemData));
-}
+      for (var map in poemContentResult) {
+        PoemData poemData = PoemData.fromMap(map);
+        results.add(GlobalSearchResult.sentence(poemData));
+      }
 
 // 搜索作品集1（poem表Title字段中第一个 '·' 之前的内容）
-String collection1Sql = '''
+      String collection1Sql = '''
   SELECT * FROM poem 
   WHERE SUBSTR(Title, 1, INSTR(Title, '·') - 1) LIKE ? 
   AND Title LIKE '%·%'
   $dynastyCondition
   LIMIT ? OFFSET ?
 ''';
-List<dynamic> collection1Params = ['%$query%', ...params, limit, offset];
-List<Map<String, dynamic>> collection1Result = await db.rawQuery(collection1Sql, collection1Params);
-print('作品集1查询结果：$collection1Result');
+      List<dynamic> collection1Params = ['%$query%', ...params, limit, offset];
+      List<Map<String, dynamic>> collection1Result =
+          await db.rawQuery(collection1Sql, collection1Params);
+      print('作品集1查询结果：$collection1Result');
 
-for (var map in collection1Result) {
-  PoemData poemData = PoemData.fromMap(map);
-  results.add(GlobalSearchResult.collection1(poemData)); // 使用不同的类型标识
-}
+      for (var map in collection1Result) {
+        PoemData poemData = PoemData.fromMap(map);
+        results.add(GlobalSearchResult.collection1(poemData)); // 使用不同的类型标识
+      }
 
 // 搜索作品集2（collection表）
-String collection2Sql = 'SELECT * FROM collection WHERE title LIKE ? LIMIT ? OFFSET ?';
-List<dynamic> collection2Params = ['%$query%', limit, offset];
-List<Map<String, dynamic>> collection2Result = await db.rawQuery(collection2Sql, collection2Params);
-print('作品集2查询结果：$collection2Result');
+      String collection2Sql =
+          'SELECT * FROM collection WHERE title LIKE ? LIMIT ? OFFSET ?';
+      List<dynamic> collection2Params = ['%$query%', limit, offset];
+      List<Map<String, dynamic>> collection2Result =
+          await db.rawQuery(collection2Sql, collection2Params);
+      print('作品集2查询结果：$collection2Result');
 
-for (var map in collection2Result) {
-  CollectionData collectionData = CollectionData.fromMap(map);
-  results.add(GlobalSearchResult.collection2(collectionData)); // 使用不同的类型标识
-}
+      for (var map in collection2Result) {
+        CollectionData collectionData = CollectionData.fromMap(map);
+        results
+            .add(GlobalSearchResult.collection2(collectionData)); // 使用不同的类型标识
+      }
 
 // 搜索名句（sentence表）
-String sentenceSql = 'SELECT * FROM sentence WHERE content LIKE ? LIMIT ? OFFSET ?';
-List<dynamic> sentenceParams = ['%$query%', limit, offset];
-List<Map<String, dynamic>> sentenceResult = await db.rawQuery(sentenceSql, sentenceParams);
-print('名句查询结果：$sentenceResult');
+      String sentenceSql =
+          'SELECT * FROM sentence WHERE content LIKE ? LIMIT ? OFFSET ?';
+      List<dynamic> sentenceParams = ['%$query%', limit, offset];
+      List<Map<String, dynamic>> sentenceResult =
+          await db.rawQuery(sentenceSql, sentenceParams);
+      print('名句查询结果：$sentenceResult');
 
-for (var map in sentenceResult) {
-  SentenceData sentenceData = SentenceData.fromMap(map);
-  results.add(GlobalSearchResult.famousSentence(sentenceData)); // 使用不同的类型标识
-}
+      for (var map in sentenceResult) {
+        SentenceData sentenceData = SentenceData.fromMap(map);
+        results
+            .add(GlobalSearchResult.famousSentence(sentenceData)); // 使用不同的类型标识
+      }
 
 // 返回合并的结果列表
-return results;
-
+      return results;
     }
   }
 }

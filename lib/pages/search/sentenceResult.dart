@@ -1,26 +1,25 @@
-// lib/pages/search/poemLineResult.dart
-
 import 'package:flutter/material.dart';
-import '../../models/poemdetailmodel.dart';
-import '../../services/search_service.dart';
-import '../../services/db_service.dart';
+import '../../models/search/SentenceData.dart';
 import '../detail/poem.dart';
+import '../../models/poemdetailmodel.dart';
+import '../../services/db_service.dart';
+import '../../services/search_service.dart';
 
-class PoemLineResultPage extends StatefulWidget {
+class SentenceResultPage extends StatefulWidget {
   final String searchQuery;
   final String dynasty;
 
-  PoemLineResultPage({
+  SentenceResultPage({
     required this.searchQuery,
     required this.dynasty,
   });
 
   @override
-  _PoemLineResultPageState createState() => _PoemLineResultPageState();
+  _SentenceResultPageState createState() => _SentenceResultPageState();
 }
 
-class _PoemLineResultPageState extends State<PoemLineResultPage> {
-  List<PoemDetailModel> _poemResults = [];
+class _SentenceResultPageState extends State<SentenceResultPage> {
+  List<SentenceData> _sentenceResults = [];
   int _currentPage = 1;
   bool _isLoading = false;
   bool _hasMoreData = true;
@@ -60,16 +59,16 @@ class _PoemLineResultPageState extends State<PoemLineResultPage> {
       List<dynamic> results = await SearchService.search(
         query: widget.searchQuery,
         dynasty: widget.dynasty,
-        option: '诗句',
+        option: '名句',
         limit: _pageSize,
         offset: (_currentPage - 1) * _pageSize,
       );
 
-      List<PoemDetailModel> newResults = results.cast<PoemDetailModel>();
+      List<SentenceData> newResults = results.cast<SentenceData>();
 
       setState(() {
         _currentPage++;
-        _poemResults.addAll(newResults);
+        _sentenceResults.addAll(newResults);
         _isLoading = false;
         if (newResults.length < _pageSize) {
           _hasMoreData = false;
@@ -86,55 +85,24 @@ class _PoemLineResultPageState extends State<PoemLineResultPage> {
     }
   }
 
-  // 方法：从诗词内容中提取包含查询内容的行
-  String extractMatchingLines(String content, String query) {
-    // 将内容按标点符号和换行符分割
-    List<String> lines = content.split(RegExp(r'[，。？！；：\n]'));
-
-    // 找到包含查询内容的行的索引
-    int index = lines.indexWhere((line) => line.contains(query));
-
-    if (index != -1) {
-      // 获取该行和它的前后行（构成对仗句）
-      String matchingLines = '';
-
-      // 获取前一行（如果有）
-      if (index > 0) {
-        matchingLines += lines[index - 1] + '，';
-      }
-
-      // 当前行
-      matchingLines += lines[index];
-
-      // 获取后一行（如果有）
-      if (index < lines.length - 1) {
-        matchingLines += '，' + lines[index + 1];
-      }
-
-      return matchingLines;
-    } else {
-      return ''; // 未找到匹配的行
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('诗句搜索结果'),
+        title: Text('名句搜索结果'),
       ),
-      body: _poemResults.isEmpty && !_hasMoreData
+      body: _sentenceResults.isEmpty && !_hasMoreData
           ? Center(
               child: Text(
-                '未找到与 "${widget.searchQuery}" 相关的诗句',
+                '未找到与 "${widget.searchQuery}" 相关的名句',
                 style: TextStyle(fontSize: 18),
               ),
             )
           : ListView.builder(
               controller: _scrollController,
-              itemCount: _poemResults.length + 1,
+              itemCount: _sentenceResults.length + 1,
               itemBuilder: (context, index) {
-                if (index == _poemResults.length) {
+                if (index == _sentenceResults.length) {
                   if (_hasMoreData) {
                     return Center(child: CircularProgressIndicator());
                   } else {
@@ -142,11 +110,7 @@ class _PoemLineResultPageState extends State<PoemLineResultPage> {
                   }
                 }
 
-                final poem = _poemResults[index];
-                String content = poem.content ?? '';
-                String matchingLines =
-                    extractMatchingLines(content, widget.searchQuery);
-
+                SentenceData sentence = _sentenceResults[index];
                 return GestureDetector(
                   onTap: () async {
                     try {
@@ -158,7 +122,7 @@ class _PoemLineResultPageState extends State<PoemLineResultPage> {
                       );
 
                       PoemDetailModel poemDetail =
-                          await DbService.getQuoteById(poem.id);
+                          await DbService.getQuoteById(sentence.poetryId);
 
                       Navigator.pop(context);
 
@@ -182,22 +146,21 @@ class _PoemLineResultPageState extends State<PoemLineResultPage> {
                     padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10), // 圆角矩形
+                      borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.5),
                           spreadRadius: 2,
                           blurRadius: 5,
-                          offset: Offset(0, 3), // 阴影位置
+                          offset: Offset(0, 3),
                         ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 第一行：作品名
                         Text(
-                          poem.title ?? '',
+                          sentence.poetryName,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey,
@@ -205,18 +168,16 @@ class _PoemLineResultPageState extends State<PoemLineResultPage> {
                           textAlign: TextAlign.left,
                         ),
                         SizedBox(height: 5),
-                        // 第二行：匹配的诗句内容
                         Text(
-                          matchingLines.isNotEmpty ? matchingLines : '未找到匹配的诗句',
+                          sentence.content,
                           style: TextStyle(
                             fontSize: 16,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: 5),
-                        // 第三行：作者名
                         Text(
-                          poem.author ?? '',
+                          sentence.poetName,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey,
