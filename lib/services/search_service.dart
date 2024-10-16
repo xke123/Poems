@@ -11,6 +11,156 @@ import '../models/search/SentenceData.dart';
 import '../models/author_model.dart';
 
 class SearchService {
+  // 在 SearchService 中添加以下方法
+  static Future<List<GlobalSearchResult>> searchGlobalByType({
+    required String query,
+    required String dynasty,
+    required String type, // 新增参数，用于指定类型
+    int limit = 30,
+    int offset = 0,
+  }) async {
+    final db = await DbService.initDb();
+    // 根据类型构建查询
+    // 这里只展示针对 'poem' 类型的查询，其他类型可以类似地实现
+    if (type == 'poem') {
+      // 查询诗词标题
+      String poemTitleSql = 'SELECT * FROM poem WHERE Title LIKE ?';
+      List<dynamic> poemTitleParams = ['%$query%'];
+
+      if (dynasty != '无') {
+        poemTitleSql += ' AND Dynasty = ?';
+        poemTitleParams.add(dynasty);
+      }
+
+      poemTitleSql += ' LIMIT ? OFFSET ?';
+      poemTitleParams.addAll([limit, offset]);
+
+      List<Map<String, dynamic>> poemTitleResult =
+          await db.rawQuery(poemTitleSql, poemTitleParams);
+      print('诗词标题查询结果：$poemTitleResult');
+
+      List<GlobalSearchResult> results = [];
+
+      for (var map in poemTitleResult) {
+        PoemData poemData = PoemData.fromMap(map);
+        results.add(GlobalSearchResult.poem(poemData));
+      }
+
+      return results;
+    }
+    if (type == 'sentence') {
+      // 查询诗词内容包含查询词的记录
+      String poemContentSql = 'SELECT * FROM poem WHERE Content LIKE ?';
+      List<dynamic> poemContentParams = ['%$query%'];
+
+      if (dynasty != '无') {
+        poemContentSql += ' AND Dynasty = ?';
+        poemContentParams.add(dynasty);
+      }
+
+      poemContentSql += ' LIMIT ? OFFSET ?';
+      poemContentParams.addAll([limit, offset]);
+
+      List<Map<String, dynamic>> poemContentResult =
+          await db.rawQuery(poemContentSql, poemContentParams);
+      print('诗句查询结果：$poemContentResult');
+
+      List<GlobalSearchResult> results = [];
+
+      for (var map in poemContentResult) {
+        PoemData poemData = PoemData.fromMap(map);
+        results.add(GlobalSearchResult.sentence(poemData));
+      }
+
+      return results;
+    }
+    if (type == 'famous_sentence') {
+      // 查询名句（sentence表）
+      String sentenceSql = 'SELECT * FROM sentence WHERE content LIKE ?';
+      List<dynamic> sentenceParams = ['%$query%'];
+
+      if (dynasty != '无') {
+        sentenceSql += ' AND Dynasty = ?';
+        sentenceParams.add(dynasty);
+      }
+
+      sentenceSql += ' LIMIT ? OFFSET ?';
+      sentenceParams.addAll([limit, offset]);
+
+      List<Map<String, dynamic>> sentenceResult =
+          await db.rawQuery(sentenceSql, sentenceParams);
+      print('名句查询结果：$sentenceResult');
+
+      List<GlobalSearchResult> results = [];
+
+      for (var map in sentenceResult) {
+        SentenceData sentenceData = SentenceData.fromMap(map);
+        results.add(GlobalSearchResult.famousSentence(sentenceData));
+      }
+
+      return results;
+    }
+    if (type == 'collection1') {
+      // 查询作品集1（poem表Title字段中第一个 '·' 之前的内容）
+      String collection1Sql = '''
+    SELECT * FROM poem 
+    WHERE SUBSTR(Title, 1, INSTR(Title, '·') - 1) LIKE ? 
+      AND Title LIKE '%·%'
+  ''';
+      List<dynamic> collection1Params = ['%${query}%'];
+
+      if (dynasty != '无') {
+        collection1Sql += ' AND Dynasty = ?';
+        collection1Params.add(dynasty);
+      }
+
+      collection1Sql += ' LIMIT ? OFFSET ?';
+      collection1Params.addAll([limit, offset]);
+
+      List<Map<String, dynamic>> collection1Result =
+          await db.rawQuery(collection1Sql, collection1Params);
+      print('作品集1查询结果：$collection1Result');
+
+      List<GlobalSearchResult> results = [];
+
+      for (var map in collection1Result) {
+        PoemData poemData = PoemData.fromMap(map);
+        results.add(GlobalSearchResult.collection1(poemData));
+      }
+
+      return results;
+    }
+    if (type == 'famous_sentence') {
+      // 查询名句（sentence表）
+      String sentenceSql = 'SELECT * FROM sentence WHERE content LIKE ?';
+      List<dynamic> sentenceParams = ['%$query%'];
+
+      if (dynasty != '无') {
+        sentenceSql += ' AND Dynasty = ?';
+        sentenceParams.add(dynasty);
+      }
+
+      sentenceSql += ' LIMIT ? OFFSET ?';
+      sentenceParams.addAll([limit, offset]);
+
+      List<Map<String, dynamic>> sentenceResult =
+          await db.rawQuery(sentenceSql, sentenceParams);
+      print('名句查询结果：$sentenceResult');
+
+      List<GlobalSearchResult> results = [];
+
+      for (var map in sentenceResult) {
+        SentenceData sentenceData = SentenceData.fromMap(map);
+        results.add(GlobalSearchResult.famousSentence(sentenceData));
+      }
+
+      return results;
+    }
+
+    // 如果类型不匹配，返回空列表
+    return [];
+  }
+
   // 全局搜索，搜索作品集
   static Future<List<GlobalSearchResult>> searchCollectionsGlobal({
     required String query,
@@ -229,7 +379,6 @@ class SearchService {
         params.add(dynasty);
       }
       params.addAll([limit, offset]);
-
       result = await db.rawQuery(sql, params);
       print('搜索诗句，SQL：$sql，参数：$params');
       print('搜索结果：$result');

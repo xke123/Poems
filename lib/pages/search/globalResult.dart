@@ -10,6 +10,10 @@ import '../../models/search/SentenceData.dart';
 import '../../models/poemdetailmodel.dart';
 import '../../services/db_service.dart';
 import '../../pages/detail/poem.dart';
+import '../../widgets/PoemTab.dart';
+import '../../widgets/SentenceTab.dart';
+import '../../widgets/Collection1Tab.dart';
+import '../../widgets/FamousSentenceTab.dart';
 
 class GlobalResultPage extends StatelessWidget {
   final String searchQuery;
@@ -125,13 +129,32 @@ class GlobalResultPage extends StatelessWidget {
                             child: TabBarView(
                               children: [
                                 // 作品列表
-                                buildListView(poemResults, context),
+                                // buildListView(poemResults, context),
+                                PoemTabContent(
+                                  searchQuery: searchQuery,
+                                  dynasty: dynasty,
+                                ),
                                 // 诗句列表
-                                buildListView(sentenceResults, context),
+                                // buildListView(sentenceResults, context),
+
+                                // 诗句列表
+                                SentenceTabContent(
+                                  searchQuery: searchQuery,
+                                  dynasty: dynasty,
+                                ),
+
                                 // 作品集1列表
-                                buildListView(collection1Results, context),
+                                // buildListView(collection1Results, context),
+                                Collection1TabContent(
+                                  searchQuery: searchQuery,
+                                  dynasty: dynasty,
+                                ),
                                 // 名句列表
-                                buildListView(famousSentenceResults, context),
+                                // buildListView(famousSentenceResults, context),
+                                FamousSentenceTabContent(
+                                  searchQuery: searchQuery,
+                                  dynasty: dynasty,
+                                ),
                                 // 如果有更多类型，可以继续添加ListView
                               ],
                             ),
