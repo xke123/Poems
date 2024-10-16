@@ -1,12 +1,79 @@
-// lib/pages/search/author_horizontal_list.dart
-
 import 'package:flutter/material.dart';
 import '../models/search/GlobalSearchResult.dart';
+import '../services/search_service.dart';
+import '../models/search/AuthorData.dart';
+import '../../models/poetdetail_model.dart';
+import '../../services/db_service.dart';
+import '../../pages/detail/poet.dart'; // 导入作者详情页
 
-class AuthorHorizontalList extends StatelessWidget {
-  final List<GlobalSearchResult> authorResults;
+class AuthorHorizontalList extends StatefulWidget {
+  final String searchQuery;
+  final String dynasty;
+  final List<GlobalSearchResult> initialResults;
 
-  AuthorHorizontalList({required this.authorResults});
+  AuthorHorizontalList({
+    required this.searchQuery,
+    required this.dynasty,
+    required this.initialResults,
+  });
+
+  @override
+  _AuthorHorizontalListState createState() => _AuthorHorizontalListState();
+}
+
+class _AuthorHorizontalListState extends State<AuthorHorizontalList> {
+  List<GlobalSearchResult> authorResults = [];
+  ScrollController _scrollController = ScrollController();
+  bool isLoading = false;
+  int page = 1; // 当前页码
+  int limit = 20; // 每页数量
+
+  @override
+  void initState() {
+    super.initState();
+    authorResults = widget.initialResults; // 初始化数据
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _fetchAuthors() async {
+    if (isLoading) return; // 防止重复请求
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      List<GlobalSearchResult> newResults =
+          await SearchService.searchAuthorsGlobal(
+        query: widget.searchQuery,
+        dynasty: widget.dynasty,
+        limit: limit,
+        offset: page * limit,
+      );
+
+      setState(() {
+        page++;
+        authorResults.addAll(newResults);
+        isLoading = false;
+      });
+    } catch (e) {
+      print('获取作者数据失败: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.extentAfter < 200) {
+      _fetchAuthors();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,17 +96,39 @@ class AuthorHorizontalList extends StatelessWidget {
         Container(
           height: sectionHeight * 0.7,
           child: ListView.builder(
+            controller: _scrollController,
             scrollDirection: Axis.horizontal,
-            itemCount: authorResults.length,
+            itemCount: authorResults.length + 1, // 加1用于加载指示器
             itemBuilder: (context, index) {
+              if (index == authorResults.length) {
+                return isLoading
+                    ? Container(
+                        width: 50,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : SizedBox();
+              }
               final result = authorResults[index];
               final author = result.authorData!;
               final String imagePath = 'assets/images/${author.id}.jpg';
 
               return GestureDetector(
-                onTap: () {
+                onTap: () async {
                   // 跳转到作者详情页面
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => AuthorDetailPage(authorData: author)));
+                  try {
+                    // 从数据库获取作者详情
+                    PoetDetailModel poetDetail =
+                        await DbService.getAuthorById(author.id);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            PoetDetailPage(poetDetail: poetDetail),
+                      ),
+                    );
+                  } catch (e) {
+                    print('获取作者详情失败: $e');
+                  }
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

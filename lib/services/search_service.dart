@@ -11,6 +11,75 @@ import '../models/search/SentenceData.dart';
 import '../models/author_model.dart';
 
 class SearchService {
+  // 全局搜索，搜索作品集
+  static Future<List<GlobalSearchResult>> searchCollectionsGlobal({
+    required String query,
+    required String dynasty,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final db = await DbService.initDb();
+
+    query = query.trim();
+    if (query.isEmpty) {
+      throw Exception('查询内容不能为空');
+    }
+
+    String sql = 'SELECT * FROM collection WHERE title LIKE ?';
+    List<dynamic> params = ['%$query%'];
+
+    sql += ' ORDER BY id ASC LIMIT ? OFFSET ?';
+    params.addAll([limit, offset]);
+
+    List<Map<String, dynamic>> result = await db.rawQuery(sql, params);
+    print('分页搜索作品集，SQL：$sql，参数：$params');
+    print('搜索结果：$result');
+
+    List<GlobalSearchResult> collectionResults = result.map((map) {
+      CollectionData collectionData = CollectionData.fromMap(map);
+      return GlobalSearchResult.collection2(collectionData);
+    }).toList();
+
+    return collectionResults;
+  }
+
+  // 全局搜索，搜索作者
+  static Future<List<GlobalSearchResult>> searchAuthorsGlobal({
+    required String query,
+    required String dynasty,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final db = await DbService.initDb();
+
+    query = query.trim();
+    if (query.isEmpty) {
+      throw Exception('查询内容不能为空');
+    }
+
+    String sql = 'SELECT * FROM author WHERE Name LIKE ?';
+    List<dynamic> params = ['%$query%'];
+
+    if (dynasty != '无') {
+      sql += ' AND Dynasty = ?';
+      params.add(dynasty);
+    }
+
+    sql += ' ORDER BY id ASC LIMIT ? OFFSET ?';
+    params.addAll([limit, offset]);
+
+    List<Map<String, dynamic>> result = await db.rawQuery(sql, params);
+    print('分页搜索作者，SQL：$sql，参数：$params');
+    print('搜索结果：$result');
+
+    List<GlobalSearchResult> authorResults = result.map((map) {
+      AuthorData authorData = AuthorData.fromMap(map);
+      return GlobalSearchResult.author(authorData);
+    }).toList();
+
+    return authorResults;
+  }
+
   /// 分页搜索作者
   static Future<List<AuthorModel>> searchAuthors({
     required String query,
