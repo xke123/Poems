@@ -1,6 +1,12 @@
+// 导入必要的包
 import 'package:flutter/material.dart';
 import 'package:poems/models/search/author.dart';
 import '../../services/search_service.dart';
+import '../../models/poemdetailmodel.dart'; // 导入 PoetDetailModel
+import '../../pages/detail/poet.dart'; // 导入 PoetDetailPage
+import '../../services/db_service.dart'; // 导入 DbService
+import '../../models/poetdetail_model.dart';
+import '../detail/poem.dart';
 
 class AuthorResultPage extends StatefulWidget {
   final String searchQuery;
@@ -207,8 +213,41 @@ class _AuthorResultPageState extends State<AuthorResultPage> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8.0, vertical: 10.0),
                   child: GestureDetector(
-                    onTap: () {
-                      // 点击作者时的逻辑，可以跳转到详情页
+                    onTap: () async {
+                      // 点击作者时的逻辑，导航到作者详情页
+                      try {
+                        // 显示加载指示器
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) =>
+                              Center(child: CircularProgressIndicator()),
+                        );
+
+                        // 获取作者详细信息
+                        PoetDetailModel poetDetail =
+                            await DbService.getAuthorById(author.authorId!);
+
+                        // 关闭加载指示器
+                        Navigator.pop(context);
+
+                        // 导航到 PoetDetailPage
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PoetDetailPage(poetDetail: poetDetail),
+                          ),
+                        );
+                      } catch (e) {
+                        // 关闭加载指示器
+                        Navigator.pop(context);
+
+                        // 显示错误信息
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('获取作者详情失败：${e.toString()}')),
+                        );
+                      }
                     },
                     child: Container(
                       width: 60,
@@ -311,8 +350,41 @@ class _AuthorResultPageState extends State<AuthorResultPage> {
                 child: ListTile(
                   title: Text(poem.poemTitle ?? '未知作品'),
                   subtitle: Text('作者: ${poem.poemAuthor ?? '未知'}'),
-                  onTap: () {
-                    // 点击事件逻辑，可以跳转到作品详情页
+                  onTap: () async {
+                    // 点击作品时的逻辑，导航到作品详情页
+                    try {
+                      // 显示加载指示器
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) =>
+                            Center(child: CircularProgressIndicator()),
+                      );
+
+                      // 获取作品详细信息
+                      PoemDetailModel poemDetail =
+                          await DbService.getQuoteById(poem.poemId!);
+
+                      // 关闭加载指示器
+                      Navigator.pop(context);
+
+                      // 导航到 PoemDetailPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              PoemDetailPage(poemDetail: poemDetail),
+                        ),
+                      );
+                    } catch (e) {
+                      // 关闭加载指示器
+                      Navigator.pop(context);
+
+                      // 显示错误信息
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('获取作品详情失败：${e.toString()}')),
+                      );
+                    }
                   },
                 ),
               ),
