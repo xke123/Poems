@@ -16,42 +16,58 @@ import '../models/dynastydetailmodel.dart';
 
 class DbService {
   static Database? _db;
+  static Future<Database>? _initDbFuture; // 新增静态 Future 变量
 
   // 初始化数据库
-  static Future<Database> initDb() async {
+  static Future<Database> initDb() {
+    if (_db != null) {
+      return Future.value(_db);
+    }
+
+    if (_initDbFuture != null) {
+      return _initDbFuture!;
+    }
+
+    _initDbFuture = _initializeDb();
+    return _initDbFuture!;
+  }
+
+  static Future<Database> _initializeDb() async {
     try {
-      if (_db == null) {
-        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-          sqfliteFfiInit();
-          databaseFactory = databaseFactoryFfi;
-        }
-
-        // 获取数据库路径
-        String dbPath = await getDatabasesPath();
-        String path = join(dbPath, 'poems.db'); // 数据库存放路径
-        print('数据库路径: $path');
-
-        // 检查数据库文件是否存在
-        bool exists = await io.File(path).exists();
-
-        if (!exists) {
-          // 数据库文件不存在，从 assets 复制
-          print('数据库文件不存在，从 assets 复制');
-          ByteData data = await rootBundle.load('assets/database/poems.db');
-          List<int> bytes =
-              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-
-          // 将 assets 中的数据库文件复制到应用数据库路径
-          await io.File(path).writeAsBytes(bytes);
-        }
-
-        // 打开数据库
-        _db = await openDatabase(path, version: 1);
-        print('数据库连接成功');
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        sqfliteFfiInit();
+        databaseFactory = databaseFactoryFfi;
       }
+
+      // 获取数据库路径
+      String dbPath = await getDatabasesPath();
+      String path = join(dbPath, 'poems.db'); // 数据库存放路径
+      print('数据库路径: $path');
+
+      // 检查数据库文件是否存在
+      bool exists = await io.File(path).exists();
+
+      if (!exists) {
+        // 数据库文件不存在，从 assets 复制
+        print('数据库文件不存在，从 assets 复制');
+        ByteData data = await rootBundle.load('assets/database/poems.db');
+        List<int> bytes =
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+
+        // 将 assets 中的数据库文件复制到应用数据库路径
+        await io.File(path).writeAsBytes(bytes);
+        print('数据库文件复制完成');
+      } else {
+        print('数据库文件已存在，无需复制');
+      }
+
+      // 打开数据库
+      _db = await openDatabase(path, version: 1);
+      print('数据库连接成功');
       return _db!;
     } catch (e) {
       print('数据库初始化失败: $e');
+      _initDbFuture = null; // 重置 Future，以便下次尝试
       throw Exception('数据库初始化失败');
     }
   }
@@ -253,61 +269,60 @@ class DbService {
   }
 
   // 获取指定朝代的作者数据，支持分页
-static Future<List<DynastyDetailModel>> getDynastyAuthors(
-    String dynasty, int page, int pageSize) async {
-  try {
-    final db = await initDb(); // 初始化数据库
-    final offset = (page - 1) * pageSize; // 计算偏移量
+  static Future<List<DynastyDetailModel>> getDynastyAuthors(
+      String dynasty, int page, int pageSize) async {
+    try {
+      final db = await initDb(); // 初始化数据库
+      final offset = (page - 1) * pageSize; // 计算偏移量
 
-    // 从 author 表获取指定朝代的作者数据，支持分页
-    List<Map<String, dynamic>> authorsResult = await db.rawQuery(
-      'SELECT * FROM author WHERE Dynasty = ? LIMIT ? OFFSET ?',
-      [dynasty, pageSize, offset],
-    );
+      // 从 author 表获取指定朝代的作者数据，支持分页
+      List<Map<String, dynamic>> authorsResult = await db.rawQuery(
+        'SELECT * FROM author WHERE Dynasty = ? LIMIT ? OFFSET ?',
+        [dynasty, pageSize, offset],
+      );
 
-    print('获取到的作者数量: ${authorsResult.length}');
-    print('作者数据详情:');
-    authorsResult.forEach((author) {
-      print(author); // 打印每一位作者的详细信息
-    });
+      print('获取到的作者数量: ${authorsResult.length}');
+      print('作者数据详情:');
+      authorsResult.forEach((author) {
+        print(author); // 打印每一位作者的详细信息
+      });
 
-    // 处理作者数据并返回
-    return authorsResult
-        .map((author) => DynastyDetailModel.fromAuthorMap(author))
-        .toList();
-  } catch (e) {
-    print('获取朝代作者数据失败: $e');
-    throw Exception('获取朝代作者数据失败');
+      // 处理作者数据并返回
+      return authorsResult
+          .map((author) => DynastyDetailModel.fromAuthorMap(author))
+          .toList();
+    } catch (e) {
+      print('获取朝代作者数据失败: $e');
+      throw Exception('获取朝代作者数据失败');
+    }
   }
-}
 
 // 获取指定朝代的作品数据，支持分页
-static Future<List<DynastyDetailModel>> getDynastyPoems(
-    String dynasty, int page, int pageSize) async {
-  try {
-    final db = await initDb(); // 初始化数据库
-    final offset = (page - 1) * pageSize; // 计算偏移量
+  static Future<List<DynastyDetailModel>> getDynastyPoems(
+      String dynasty, int page, int pageSize) async {
+    try {
+      final db = await initDb(); // 初始化数据库
+      final offset = (page - 1) * pageSize; // 计算偏移量
 
-    // 从 poem 表获取指定朝代的作品数据，支持分页
-    List<Map<String, dynamic>> poemsResult = await db.rawQuery(
-      'SELECT * FROM poem WHERE Dynasty = ? LIMIT ? OFFSET ?',
-      [dynasty, pageSize, offset],
-    );
+      // 从 poem 表获取指定朝代的作品数据，支持分页
+      List<Map<String, dynamic>> poemsResult = await db.rawQuery(
+        'SELECT * FROM poem WHERE Dynasty = ? LIMIT ? OFFSET ?',
+        [dynasty, pageSize, offset],
+      );
 
-    print('获取到的诗词数量: ${poemsResult.length}');
-    print('诗词数据详情:');
-    poemsResult.forEach((poem) {
-      print(poem); // 打印每一首诗词的详细信息
-    });
+      print('获取到的诗词数量: ${poemsResult.length}');
+      print('诗词数据详情:');
+      poemsResult.forEach((poem) {
+        print(poem); // 打印每一首诗词的详细信息
+      });
 
-    // 处理诗词数据并返回
-    return poemsResult
-        .map((poem) => DynastyDetailModel.fromPoemMap(poem))
-        .toList();
-  } catch (e) {
-    print('获取朝代作品数据失败: $e');
-    throw Exception('获取朝代作品数据失败');
+      // 处理诗词数据并返回
+      return poemsResult
+          .map((poem) => DynastyDetailModel.fromPoemMap(poem))
+          .toList();
+    } catch (e) {
+      print('获取朝代作品数据失败: $e');
+      throw Exception('获取朝代作品数据失败');
+    }
   }
-}
-
 }

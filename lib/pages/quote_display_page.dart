@@ -13,6 +13,7 @@ class QuoteDisplayPage extends StatefulWidget {
 class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
   List<QuoteModel> _quotes = [];
   double _swipeProgress = 0.0; // 跟踪顶层卡片的滑动进度
+  bool _isLoading = true; // 标记是否在加载
 
   @override
   void initState() {
@@ -30,12 +31,16 @@ class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
       ]);
       setState(() {
         _quotes = initialQuotes;
+        _isLoading = false;
       });
     } catch (e) {
       print('获取随机句子失败: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('加载数据失败，请重试！')),
       );
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -75,57 +80,70 @@ class _QuoteDisplayPageState extends State<QuoteDisplayPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _quotes.isEmpty
+      body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Stack(
-              children: _quotes
-                  .asMap()
-                  .entries
-                  .map((entry) {
-                    int index = entry.key;
-                    QuoteModel quote = entry.value;
+          : _quotes.isEmpty
+              ? Center(child: Text('没有可显示的句子'))
+              : Center(
+                  // 确保 Stack 在屏幕中心
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none, // 防止卡片被裁剪
+                    children: _quotes
+                        .asMap()
+                        .entries
+                        .map((entry) {
+                          int index = entry.key;
+                          QuoteModel quote = entry.value;
 
-                    // 基础缩放和偏移量
-                    double baseScale = 1 - (index * 0.05);
-                    double baseOffset = index * 8.0;
+                          // 增加缩放和偏移量
+                          double baseScale =
+                              1 - (index * 0.07); // 1.0, 0.93, 0.86
+                          double baseOffset = index * 30.0; // 0, 30, 60
 
-                    // 动态调整缩放和偏移量
-                    double scale = baseScale;
-                    double offset = baseOffset;
+                          // 可选：添加轻微的水平偏移和旋转
+                          double horizontalOffset = index * 3.0; // 每层卡片稍微水平偏移
+                          double rotation = (index - 1) * 0.02; // 每层卡片稍微旋转
 
-                    if (index == 1) {
-                      // 第二层卡片
-                      scale += 0.05 * _swipeProgress; // 放大
-                      offset -= 8.0 * _swipeProgress; // 向前移动
-                    } else if (index == 2) {
-                      // 第三层卡片
-                      scale += 0.025 * _swipeProgress; // 少量放大
-                      offset -= 4.0 * _swipeProgress; // 少量向前移动
-                    }
+                          // 动态调整缩放和偏移量
+                          double scale = baseScale;
+                          double verticalOffset = baseOffset;
 
-                    return Positioned(
-                      top: offset,
-                      left: offset,
-                      right: offset,
-                      bottom: offset,
-                      child: Transform.scale(
-                        scale: scale,
-                        child: QuoteCard(
-                          key: ValueKey(quote.id),
-                          quote: quote,
-                          onRefresh: _onCardSwiped,
-                          isTop: index == 0, // 只有顶层卡片可滑动
-                          onSwipeProgress: index == 0
-                              ? _handleSwipeProgress
-                              : null, // 只有顶层卡片传递滑动进度
-                        ),
-                      ),
-                    );
-                  })
-                  .toList()
-                  .reversed
-                  .toList(), // 逆序确保顶层卡片在Stack的最后
-            ),
+                          if (index == 1) {
+                            // 第二层卡片
+                            scale += 0.05 * _swipeProgress; // 放大
+                            verticalOffset -= 15.0 * _swipeProgress; // 向前移动
+                          } else if (index == 2) {
+                            // 第三层卡片
+                            scale += 0.025 * _swipeProgress; // 少量放大
+                            verticalOffset -= 7.5 * _swipeProgress; // 少量向前移动
+                          }
+
+                          // 打印调试信息
+                          print(
+                              '卡片索引: $index, scale: $scale, verticalOffset: $verticalOffset');
+
+                          return Transform.translate(
+                            offset: Offset(0, verticalOffset),
+                            child: Transform.scale(
+                              scale: scale,
+                              child: QuoteCard(
+                                key: ValueKey(quote.id),
+                                quote: quote,
+                                onRefresh: _onCardSwiped,
+                                isTop: index == 0, // 只有顶层卡片可滑动
+                                onSwipeProgress: index == 0
+                                    ? _handleSwipeProgress
+                                    : null, // 只有顶层卡片传递滑动进度
+                              ),
+                            ),
+                          );
+                        })
+                        .toList()
+                        .reversed
+                        .toList(), // 逆序确保顶层卡片在Stack的最后
+                  ),
+                ),
     );
   }
 }
