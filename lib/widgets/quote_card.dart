@@ -1,3 +1,5 @@
+// lib/widgets/quote_card.dart
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/quote_model.dart';
@@ -14,7 +16,7 @@ class QuoteCard extends StatelessWidget {
   // 删除所有符号并根据符号换行的方法
   String formatContent(String content) {
     String formattedContent = content.replaceAllMapped(
-      RegExp(r'[，。！？；]'),
+      RegExp(r'[，、。！？；]'),
       (Match match) => '\n', // 替换为换行符
     );
     return formattedContent;
@@ -32,6 +34,28 @@ class QuoteCard extends StatelessWidget {
       );
     } catch (e) {
       print('获取诗词详情失败: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('加载诗词详情失败，请重试！')),
+      );
+    }
+  }
+
+  // 辅助函数：移除符号
+  String removeSymbols(String input) {
+    return input.replaceAll(RegExp(r'[·  ·  / ，。！？；：、“”‘’（）《》〈〉【】「」『』]+'), ' ');
+  }
+
+  // 根据可用高度和每个字符的高度，截断字符串并添加省略号
+  List<String> getTruncatedCharacters(
+      String text, double maxHeight, double charHeight) {
+    int maxChars = (maxHeight / charHeight).floor();
+    if (text.length <= maxChars) {
+      return text.split('');
+    } else {
+      if (maxChars <= 1) return ['…'];
+      List<String> chars = text.substring(0, maxChars - 1).split('');
+      chars.add('…');
+      return chars;
     }
   }
 
@@ -68,21 +92,34 @@ class QuoteCard extends StatelessWidget {
                       // 左边 15% 显示作者名，竖排显示
                       Expanded(
                         flex: 15,
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: quote.poetName.split('').map((char) {
-                              return Text(
-                                char,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                                textAlign: TextAlign.center,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16.0), // 增加左侧内边距
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Column(
+                                children: [
+                                  SizedBox(
+                                      height: constraints.maxHeight *
+                                          0.7), // 70% 空间
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children:
+                                        quote.poetName.split('').map((char) {
+                                      return Text(
+                                        char,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
                               );
-                            }).toList(),
+                            },
                           ),
                         ),
                       ),
@@ -96,7 +133,6 @@ class QuoteCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: formatContent(quote.content)
                                 .split('\n')
-                                .reversed
                                 .map((line) {
                               return Padding(
                                 padding:
@@ -109,7 +145,7 @@ class QuoteCard extends StatelessWidget {
                                     return Text(
                                       char,
                                       style: TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 20,
                                       ),
                                       textAlign: TextAlign.center,
                                     );
@@ -121,23 +157,44 @@ class QuoteCard extends StatelessWidget {
                         ),
                       ),
                       // 右边 15% 显示诗名
+                      // 右边 15% 显示诗名
                       Expanded(
                         flex: 15,
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: quote.poetryName.split('').map((char) {
-                              return Text(
-                                char,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.normal,
-                                ),
-                                textAlign: TextAlign.center,
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.only(right: 16.0), // 增加右侧内边距
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Column(
+                                children: [
+                                  SizedBox(
+                                      height: constraints.maxHeight *
+                                          0.2), // 20% 空间
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children:
+                                            removeSymbols(quote.poetryName)
+                                                .split('')
+                                                .map((char) {
+                                          return Text(
+                                            char,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.normal,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               );
-                            }).toList(),
+                            },
                           ),
                         ),
                       ),
