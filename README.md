@@ -1,13 +1,14 @@
-# 项目名称和徽标
+<div style="text-align: center;"><img src="assets/icon/app_icon.png" alt="应用图标" width="256" height="256"></div>
+
+# 项目名称及应用截图
 - 项目名称及来源
   项目名称是“句读”（dòu），灵感来自我非常喜欢的一句歌词：“飞绪何筹飘零逐流，又起褶皱。苏醒以后，满天句读”。
   句读是古代中文书写时用以标记休止和停顿的符号。在古代，中文书写并没有标点符号，但为了确保阅读时语气顺畅、意思传达准确，读书人会使用圈点法在文中自行添加记号，这就是句读的起源。
 
 - 简洁的徽标或屏幕截图
-  - 应用图标
-    ![应用图标](assets/icon/app_icon.png)
   - 应用截图
-    ![截图1](assets/screenshots/截图1.png)![截图2](assets/screenshots/截图2.png)![截图3](assets/screenshots/截图3.png)
+    
+    <img src="assets/screenshots/截图1.png" alt="截图1" width="300"> <img src="assets/screenshots/截图2.png" alt="截图2" width="300"> <img src="assets/screenshots/截图3.png" alt="截图3" width="300">
 
 ## 简介
 - 本项目整合了多个数据源的大型数据库，为80多万首诗词古文、3万多位作者和6000多句名言提供了一个丰富的用户界面，让中华文化的璀璨光芒跃然纸上。
@@ -52,7 +53,7 @@
     - 搜索页代码在 `search_page.dart` 中。
     - 搜索结果页代码位于 `/pages/search/` 目录下。
 
-## 项目数据来源
+## 参考项目
 - 本项目的数据来源于以下几个开源项目，经过整合和删减后使用：
   - [chinese-poetry-and-prose](https://github.com/VMIJUNV/chinese-poetry-and-prose)
   - [chinese-gushiwen](https://github.com/caoxingyu/chinese-gushiwen)
