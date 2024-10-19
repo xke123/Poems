@@ -1,4 +1,6 @@
-<div style="text-align: center;"><img src="assets/icon/app_icon.png" alt="应用图标" width="256" height="256"></div>
+<p align="center">
+  <img src="assets/icon/app_icon.png" alt="应用图标" width="256" height="256">
+</p>
 
 # 项目名称及应用截图
 - 项目名称及来源
@@ -8,7 +10,7 @@
 - 简洁的徽标或屏幕截图
   - 应用截图
     
-    <img src="assets/screenshots/截图1.png" alt="截图1" width="300"> <img src="assets/screenshots/截图2.png" alt="截图2" width="300"> <img src="assets/screenshots/截图3.png" alt="截图3" width="300">
+    <img src="assets/screenshots/截图1.png" alt="截图1" width="240"> <img src="assets/screenshots/截图2.png" alt="截图2" width="240"> <img src="assets/screenshots/截图3.png" alt="截图3" width="240">
 
 ## 简介
 - 本项目整合了多个数据源的大型数据库，为80多万首诗词古文、3万多位作者和6000多句名言提供了一个丰富的用户界面，让中华文化的璀璨光芒跃然纸上。
