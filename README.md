@@ -7,7 +7,7 @@
   - 应用图标
     ![应用图标](assets/icon/app_icon.png)
   - 应用截图
-    ![截图1](34e2a9a20d61204be22eb67b439782f.png) ![截图2](212bbaa9d8b0aef797b3ae3f71f0d38.png) ![截图3](dfa1782a0582c0e07bd16bfe2342df8.png)
+    ![截图1](assets/screenshots/截图1.png)![截图2](assets/screenshots/截图2.png)![截图3](assets/screenshots/截图3.png)
 
 ## 简介
 - 本项目整合了多个数据源的大型数据库，为80多万首诗词古文、3万多位作者和6000多句名言提供了一个丰富的用户界面，让中华文化的璀璨光芒跃然纸上。
