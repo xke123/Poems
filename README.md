@@ -1,16 +1,46 @@
-# poems
+# 项目名称和徽标
+- 项目名称及来源
+  项目名称是“句读”（），来自我很喜欢的歌词：“飞绪何筹飘零逐流，又起褶皱。苏醒以后，满天句读”
+  句读（dòu），是古代中文书写时用以标记休止和停顿处的记号。古代中文在书写上原本是没有标点符号的设计，但是在阅读时为求语气的顺畅和意思的正确传达，仍有需要注意文句的起承转合，读书人便会用圈点法在文章中自行加注记号，这就是句读的由来。
+  
+- 简洁的徽标或屏幕截图
+  
 
-A new Flutter project.
+## 简介
+- 本项目使用一个综合了多个数据源的大型数据库，给80多万诗词古文，3万多作者，6000多名句做了一个UI，让璀璨的中华文化跃然纸上。
+- 希望各位诗词古文爱好者可以通过此app，更好更方便的了解这些诗词和古文。
 
-## Getting Started
+## 功能列表
+- 项目包含诗词名句卡片，分类检索，及搜索三个功能。
+  - 诗词名句卡片每次进入会自动刷新并获取名句数据，可以通过滑动卡片进行刷新。
+  - 分类检索分为两个区域，上半部分的随机数据窗会随机的从数据库获取4个朝代，4个作品集和8个作者的数据，点击可以进入详情页
+  - 分类检索的下半部分，可以通过通过点击了解不同朝代，作者，作品集，及文体的诗词古文。
+  - 搜索页面，可以通过不同的朝代及搜索选项，搜索作者，作品名，诗句，作品集及名句数据。
 
-This project is a starting point for a Flutter application.
+## 演示
+- GIF 动画、图片或视频展示主要功能。
+- 应用的截图，展示核心界面或特色界面。
 
-A few resources to get you started if this is your first Flutter project:
+## 安装步骤
+- 如何在本地运行项目的步骤：
+  - 克隆仓库
+  - 安装依赖项
+  - 运行项目的命令等
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 架构
+- 描述项目的架构设计（如 MVVM、Provider、BLoC 等）。
+- 项目的文件夹结构介绍。
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 参考项目
+- 如何为这个项目贡献代码。
+- 分支管理和提交规范。
+- 如何报告 Bug 或提交功能请求。
+
+## 常见问题
+- 列出常见的问题和解答，帮助用户解决遇到的困难。
+
+## 许可证
+- 说明项目的开源许可证类型，如 MIT、GPL 等。
+
+## 鸣谢
+- 致谢开发过程中提供帮助的个人或项目。
