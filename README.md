@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/icon/app_icon.png" alt="应用图标" width="256" height="256">
-</p>
+
 
 # 项目名称及应用截图
 - 项目名称及来源
@@ -10,7 +8,7 @@
 - 简洁的徽标或屏幕截图
   - 应用截图
     
-    <img src="assets/screenshots/截图1.png" alt="截图1" width="240"> <img src="assets/screenshots/截图2.png" alt="截图2" width="240"> <img src="assets/screenshots/截图3.png" alt="截图3" width="240">
+    <img src="https://blog-1251963815.cos.ap-beijing.myqcloud.com/2024/202410191948094.png" alt="截图1" width="240"> <img src="https://blog-1251963815.cos.ap-beijing.myqcloud.com/2024/202410191949016.png" alt="截图2" width="240"> <img src="https://blog-1251963815.cos.ap-beijing.myqcloud.com/2024/202410191949031.png" alt="截图3" width="240">
 
 ## 简介
 - 本项目整合了多个数据源的大型数据库，为80多万首诗词古文、3万多位作者和6000多句名言提供了一个丰富的用户界面，让中华文化的璀璨光芒跃然纸上。
@@ -27,7 +25,8 @@
   - iOS端可以通过此链接加入test flight 测试进行获取
   - https://testflight.apple.com/join/08hBSAIV
 - Android 端
-  - 可以直接在release 中获取
+  - Android 端可以在release中获取,或是通过以下链接获取
+  - https://blog-1251963815.cos.ap-beijing.myqcloud.com/app-debug.apk
 ## 演示
 - GIF 动画、图片或视频展示主要功能。
 - 应用的截图，展示核心界面或特色界面。
