@@ -7,6 +7,7 @@ import 'pages/quotes_by_category_page.dart';
 import 'pages/search_page.dart'; // 引入搜索页面
 import 'models/author_viewmodel.dart';
 import 'models/collections_viewmodel.dart';
+import 'widgets/marquee_quote_page.dart';
 
 void main() {
   runApp(
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MainPage(), // 主页面包含导航栏
+      // home: MainPage(), // 主页面包含导航栏
+      home: MarqueeQuotePage(),
     );
   }
 }

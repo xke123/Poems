@@ -73,18 +73,42 @@ class DbService {
   }
 
   // 获取随机句子
-  static Future<QuoteModel> getRandomSentence() async {
+  // static Future<QuoteModel> getRandomSentence() async {
+  //   try {
+  //     final db = await initDb(); // 初始化数据库
+  //     print('正在查询随机句子...');
+
+  //     // 执行 SQL 查询
+  //     List<Map<String, dynamic>> result =
+  //         await db.rawQuery('SELECT * FROM sentence ORDER BY RANDOM() LIMIT 1');
+
+  //     if (result.isNotEmpty) {
+  //       print('查询成功，结果: ${result.first}'); // 打印查询结果
+  //       return QuoteModel.fromMap(result.first);
+  //     } else {
+  //       print('数据库中没有句子'); // 查询结果为空
+  //       throw Exception('没有找到句子');
+  //     }
+  //   } catch (e) {
+  //     print('查询失败: $e'); // 捕捉并输出查询异常
+  //     throw Exception('获取随机句子失败');
+  //   }
+  // }
+
+  // 获取多个随机句子
+  static Future<List<QuoteModel>> getRandomSentence(int count) async {
     try {
       final db = await initDb(); // 初始化数据库
       print('正在查询随机句子...');
 
-      // 执行 SQL 查询
-      List<Map<String, dynamic>> result =
-          await db.rawQuery('SELECT * FROM sentence ORDER BY RANDOM() LIMIT 1');
+      // 执行 SQL 查询，获取指定数量的随机句子
+      List<Map<String, dynamic>> results = await db.rawQuery(
+          'SELECT * FROM sentence ORDER BY RANDOM() LIMIT ?', [count]);
 
-      if (result.isNotEmpty) {
-        print('查询成功，结果: ${result.first}'); // 打印查询结果
-        return QuoteModel.fromMap(result.first);
+      if (results.isNotEmpty) {
+        print('查询成功，结果: $results'); // 打印查询结果
+        // 将查询结果转换为 List<QuoteModel>
+        return results.map((result) => QuoteModel.fromMap(result)).toList();
       } else {
         print('数据库中没有句子'); // 查询结果为空
         throw Exception('没有找到句子');
