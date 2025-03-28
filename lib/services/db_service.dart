@@ -1,352 +1,272 @@
 // lib/services/db_service.dart
-
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle, ByteData;
+import 'package:http/http.dart' as http;
+import 'package:poems/models/quote_model.dart';
+import 'package:poems/models/author_model.dart';
 import 'package:poems/models/collections_model.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'dart:io' show Platform;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import '../models/quote_model.dart';
-import 'dart:io' as io;
-import '../models/author_model.dart';
-import '../models/poemdetailmodel.dart';
-import '../models/poetdetail_model.dart';
-import '../models/dynastydetailmodel.dart';
+import 'package:poems/models/poemdetailmodel.dart';
+import 'package:poems/models/poetdetail_model.dart';
+import 'package:poems/models/dynastydetailmodel.dart';
 
 class DbService {
-  static Database? _db;
-  static Future<Database>? _initDbFuture; // 新增静态 Future 变量
+  // 设置后端 API 基础 URL（请确保此 URL 正确无误）
+  static const String baseUrl = 'https://api.logofmy.life';
 
-  // 初始化数据库
-  static Future<Database> initDb() {
-    if (_db != null) {
-      return Future.value(_db);
-    }
-
-    if (_initDbFuture != null) {
-      return _initDbFuture!;
-    }
-
-    _initDbFuture = _initializeDb();
-    return _initDbFuture!;
+  // 注：此方法仅用于兼容 search_service.dart，后续可统一调整
+  static Future<dynamic> initDb() async {
+    throw UnimplementedError(
+        'initDb 暂未实现 API 版本，请调整 search_service.dart 或实现此方法');
   }
 
-  static Future<Database> _initializeDb() async {
-    try {
-      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-        sqfliteFfiInit();
-        databaseFactory = databaseFactoryFfi;
-      }
-
-      // 获取数据库路径
-      String dbPath = await getDatabasesPath();
-      String path = join(dbPath, 'poems.db'); // 数据库存放路径
-      print('数据库路径: $path');
-
-      // 检查数据库文件是否存在
-      bool exists = await io.File(path).exists();
-
-      if (!exists) {
-        // 数据库文件不存在，从 assets 复制
-        print('数据库文件不存在，从 assets 复制');
-        ByteData data = await rootBundle.load('assets/database/poems.db');
-        List<int> bytes =
-            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-
-        // 将 assets 中的数据库文件复制到应用数据库路径
-        await io.File(path).writeAsBytes(bytes);
-        print('数据库文件复制完成');
-      } else {
-        print('数据库文件已存在，无需复制');
-      }
-
-      // 打开数据库
-      _db = await openDatabase(path, version: 1);
-      print('数据库连接成功');
-      return _db!;
-    } catch (e) {
-      print('数据库初始化失败: $e');
-      _initDbFuture = null; // 重置 Future，以便下次尝试
-      throw Exception('数据库初始化失败');
-    }
-  }
-
-  // 获取随机句子
-  // static Future<QuoteModel> getRandomSentence() async {
-  //   try {
-  //     final db = await initDb(); // 初始化数据库
-  //     print('正在查询随机句子...');
-
-  //     // 执行 SQL 查询
-  //     List<Map<String, dynamic>> result =
-  //         await db.rawQuery('SELECT * FROM sentence ORDER BY RANDOM() LIMIT 1');
-
-  //     if (result.isNotEmpty) {
-  //       print('查询成功，结果: ${result.first}'); // 打印查询结果
-  //       return QuoteModel.fromMap(result.first);
-  //     } else {
-  //       print('数据库中没有句子'); // 查询结果为空
-  //       throw Exception('没有找到句子');
-  //     }
-  //   } catch (e) {
-  //     print('查询失败: $e'); // 捕捉并输出查询异常
-  //     throw Exception('获取随机句子失败');
-  //   }
-  // }
-
-  // 获取多个随机句子
+  // 获取随机句子示例
   static Future<List<QuoteModel>> getRandomSentence(int count) async {
+    final url = Uri.parse('$baseUrl/api/random-sentence?count=$count');
+    print('[DEBUG] 请求随机句子 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      print('正在查询随机句子...');
-
-      // 执行 SQL 查询，获取指定数量的随机句子
-      List<Map<String, dynamic>> results = await db.rawQuery(
-          'SELECT * FROM sentence ORDER BY RANDOM() LIMIT ?', [count]);
-
-      if (results.isNotEmpty) {
-        print('查询成功，结果: $results'); // 打印查询结果
-        // 将查询结果转换为 List<QuoteModel>
-        return results.map((result) => QuoteModel.fromMap(result)).toList();
+      final response = await http.get(url);
+      print('[DEBUG] 随机句子响应状态码: ${response.statusCode}');
+      print('[DEBUG] 随机句子响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 随机句子解析后数据: $data');
+        return data.map((json) => QuoteModel.fromMap(json)).toList();
       } else {
-        print('数据库中没有句子'); // 查询结果为空
-        throw Exception('没有找到句子');
+        throw Exception('获取随机句子失败，状态码: ${response.statusCode}');
       }
     } catch (e) {
-      print('查询失败: $e'); // 捕捉并输出查询异常
-      throw Exception('获取随机句子失败');
+      print('[ERROR] 获取随机句子异常: $e');
+      throw Exception('获取随机句子失败: $e');
     }
   }
 
   // 获取前30个作者
   static Future<List<AuthorModel>> getAuthors(
       {int limit = 30, int offset = 0}) async {
+    final url = Uri.parse('$baseUrl/api/authors?limit=$limit&offset=$offset');
+    print('[DEBUG] 请求作者列表 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      List<Map<String, dynamic>> result = await db.rawQuery(
-          'SELECT Id, Name FROM author ORDER BY id ASC LIMIT ? OFFSET ?',
-          [limit, offset]);
-      // print('获取到的作者记录: $result');
-      return result.map((map) => AuthorModel.fromMap(map)).toList();
+      final response = await http.get(url);
+      print('[DEBUG] 作者列表响应状态码: ${response.statusCode}');
+      print('[DEBUG] 作者列表响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 作者列表解析后数据: $data');
+        return data.map((json) => AuthorModel.fromMap(json)).toList();
+      } else {
+        throw Exception('获取作者失败，状态码: ${response.statusCode}');
+      }
     } catch (e) {
-      print('获取作者失败: $e');
-      throw Exception('获取作者失败');
+      print('[ERROR] 获取作者异常: $e');
+      throw Exception('获取作者失败: $e');
     }
   }
 
-  // 获取随机的指定数量的作者，HasImage 为 1
+  // 获取随机的指定数量的作者（hasimage = true）
   static Future<List<AuthorModel>> getRandomAuthors(int count) async {
+    final url = Uri.parse('$baseUrl/api/random-authors?count=$count');
+    print('[DEBUG] 请求随机作者 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      List<Map<String, dynamic>> result = await db.rawQuery(
-          'SELECT Id, Name FROM author WHERE HasImage = 1 ORDER BY RANDOM() LIMIT ?',
-          [count]);
-      return result.map((map) => AuthorModel.fromMap(map)).toList();
+      final response = await http.get(url);
+      print('[DEBUG] 随机作者响应状态码: ${response.statusCode}');
+      print('[DEBUG] 随机作者响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 随机作者解析后数据: $data');
+        return data.map((json) => AuthorModel.fromMap(json)).toList();
+      } else {
+        throw Exception('获取随机作者失败，状态码: ${response.statusCode}');
+      }
     } catch (e) {
-      print('获取随机作者失败: $e');
-      throw Exception('获取随机作者失败');
+      print('[ERROR] 获取随机作者异常: $e');
+      throw Exception('获取随机作者失败: $e');
     }
   }
 
   // 获取30个作品集
   static Future<List<CollectionModel>> getCollections(
       {int limit = 30, int offset = 0}) async {
+    final url =
+        Uri.parse('$baseUrl/api/collections?limit=$limit&offset=$offset');
+    print('[DEBUG] 请求作品集 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      List<Map<String, dynamic>> result = await db.rawQuery(
-          'SELECT * FROM collection ORDER BY id ASC LIMIT ? OFFSET ?',
-          [limit, offset]);
-
-      // 显式指定映射类型
-      return result
-          .map<CollectionModel>((map) => CollectionModel.fromMap(map))
-          .toList();
+      final response = await http.get(url);
+      print('[DEBUG] 作品集响应状态码: ${response.statusCode}');
+      print('[DEBUG] 作品集响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 作品集解析后数据: $data');
+        return data.map((json) => CollectionModel.fromMap(json)).toList();
+      } else {
+        throw Exception('获取作品集失败，状态码: ${response.statusCode}');
+      }
     } catch (e) {
-      print('获取诗集数据失败: $e');
-      throw Exception('获取诗集数据失败');
+      print('[ERROR] 获取作品集异常: $e');
+      throw Exception('获取作品集失败: $e');
     }
   }
 
-  // 添加获取随机 Collection 数据的静态方法
-  static Future<List<CollectionModel>> getRandomCollections(int limit) async {
-    final db = await initDb(); // 确保调用的是 initDb()
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      SELECT * FROM collection
-      ORDER BY RANDOM()
-      LIMIT ?
-    ''', [limit]);
-
-    return List.generate(maps.length, (i) {
-      return CollectionModel.fromMap(maps[i]);
-    });
-  }
-
-  //获取诗词详情
+  // 获取诗词详情
   static Future<PoemDetailModel> getQuoteById(String id) async {
+    final url = Uri.parse('$baseUrl/api/poem/$id');
+    print('[DEBUG] 请求诗词详情 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      print('数据库已连接，正在执行查询语句: SELECT * FROM poem WHERE Id = $id');
-
-      List<Map<String, dynamic>> result =
-          await db.rawQuery('SELECT * FROM poem WHERE Id = ?', [id]);
-
-      if (result.isNotEmpty) {
-        print('查询成功，返回的结果: $result');
-        return PoemDetailModel.fromMap(result.first);
+      final response = await http.get(url);
+      print('[DEBUG] 诗词详情响应状态码: ${response.statusCode}');
+      print('[DEBUG] 诗词详情响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'];
+        print('[DEBUG] 诗词详情解析后数据: $data');
+        return PoemDetailModel.fromMap(data);
       } else {
-        throw Exception('没有找到诗词');
+        throw Exception('获取诗词详情失败，状态码: ${response.statusCode}');
       }
     } catch (e) {
-      print('获取诗词详情失败，id: $id，错误信息: $e');
-      throw Exception('获取诗词数据失败: $e');
+      print('[ERROR] 获取诗词详情异常: $e');
+      throw Exception('获取诗词详情失败: $e');
     }
   }
 
   // 根据作者ID获取作者详情
   static Future<PoetDetailModel> getAuthorById(String id) async {
+    final url = Uri.parse('$baseUrl/api/author/$id');
+    print('[DEBUG] 请求作者详情 URL: $url');
     try {
-      final db = await initDb();
-      print('数据库已连接，正在查询作者详情，ID: $id');
-
-      List<Map<String, dynamic>> result =
-          await db.rawQuery('SELECT * FROM author WHERE Id = ?', [id]);
-
-      if (result.isNotEmpty) {
-        print('查询成功，返回的作者详情: $result');
-        return PoetDetailModel.fromMap(result.first);
+      final response = await http.get(url);
+      print('[DEBUG] 作者详情响应状态码: ${response.statusCode}');
+      print('[DEBUG] 作者详情响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'];
+        print('[DEBUG] 作者详情解析后数据: $data');
+        return PoetDetailModel.fromMap(data);
       } else {
-        throw Exception('没有找到该作者');
+        throw Exception('获取作者详情失败，状态码: ${response.statusCode}');
       }
     } catch (e) {
-      print('获取作者详情失败，ID: $id，错误信息: $e');
-      throw Exception('获取作者数据失败: $e');
+      print('[ERROR] 获取作者详情异常: $e');
+      throw Exception('获取作者详情失败: $e');
     }
   }
 
-  // 获取指定朝代的作品和作者数据，并支持分页
+  // 获取指定朝代数据（诗词和作者）
   static Future<List<DynastyDetailModel>> getDynastyData(
       String dynasty, int page, int pageSize) async {
+    final url = Uri.parse(
+        '$baseUrl/api/dynasty-data?dynasty=$dynasty&page=$page&pageSize=$pageSize');
+    print('[DEBUG] 请求朝代数据 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      final offset = (page - 1) * pageSize; // 计算偏移量
-
-      // 从 poem 表获取指定朝代的作品数据，支持分页
-      List<Map<String, dynamic>> poemsResult = await db.rawQuery(
-        'SELECT * FROM poem WHERE Dynasty = ? LIMIT ? OFFSET ?',
-        [dynasty, pageSize, offset],
-      );
-
-      // 从 author 表获取指定朝代的作者数据，支持分页
-      List<Map<String, dynamic>> authorsResult = await db.rawQuery(
-        'SELECT * FROM author WHERE Dynasty = ? LIMIT ? OFFSET ?',
-        [dynasty, pageSize, offset],
-      );
-
-      // 打印获取到的作品和作者数量
-      print('获取到的诗词数量: ${poemsResult.length}');
-      print('获取到的作者数量: ${authorsResult.length}');
-
-      // 组合数据并返回
-      List<DynastyDetailModel> dynastyDetails = [];
-
-      // 处理诗词数据
-      for (var poem in poemsResult) {
-        dynastyDetails.add(DynastyDetailModel.fromPoemMap(poem));
+      final response = await http.get(url);
+      print('[DEBUG] 朝代数据响应状态码: ${response.statusCode}');
+      print('[DEBUG] 朝代数据响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        List<dynamic> poems = jsonResponse['poems'];
+        List<dynamic> authors = jsonResponse['authors'];
+        print('[DEBUG] 诗词数据: $poems');
+        print('[DEBUG] 作者数据: $authors');
+        List<dynamic> combined = []
+          ..addAll(poems)
+          ..addAll(authors);
+        return combined.map((e) => DynastyDetailModel.fromPoemMap(e)).toList();
+      } else {
+        throw Exception('获取朝代数据失败，状态码: ${response.statusCode}');
       }
-
-      // 处理作者数据
-      for (var author in authorsResult) {
-        dynastyDetails.add(DynastyDetailModel.fromAuthorMap(author));
-      }
-
-      return dynastyDetails;
     } catch (e) {
-      print('获取朝代数据失败: $e');
-      throw Exception('获取朝代数据失败');
+      print('[ERROR] 获取朝代数据异常: $e');
+      throw Exception('获取朝代数据失败: $e');
     }
   }
 
   // 根据作品集标题查询诗词
-  // 查询 poem 表中 Title 包含指定作品集名称的所有作品
   static Future<List<PoemDetailModel>> getPoemsByCollectionTitle(
       String collectionTitle) async {
+    final url = Uri.parse(
+        '$baseUrl/api/poems-by-collection?collectionTitle=${Uri.encodeComponent(collectionTitle)}');
+    print('[DEBUG] 请求作品集标题查询 URL: $url');
     try {
-      final db = await initDb(); // 确保数据库已经初始化
-      String symbol = '·'; // 定义特殊符号
-
-      // 查询包含特定作品集名称的诗词，确保作品标题中包含 'collectionTitle' 和 '·'
-      List<Map<String, dynamic>> result = await db.rawQuery(
-        'SELECT * FROM poem WHERE Title LIKE ? AND Title LIKE ?',
-        ['$collectionTitle ·%', '%$symbol%'], // 查询条件：Title以指定作品集名称开头，并且包含 "·"
-      );
-
-      // 打印结果数量
-      print('查询到的作品数量: ${result.length}');
-
-      // 将查询结果转换为 PoemDetailModel 列表并返回
-      return result.map((map) => PoemDetailModel.fromMap(map)).toList();
+      final response = await http.get(url);
+      print('[DEBUG] 作品集标题查询响应状态码: ${response.statusCode}');
+      print('[DEBUG] 作品集标题查询响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 作品集标题查询解析后数据: $data');
+        return data.map((json) => PoemDetailModel.fromMap(json)).toList();
+      } else {
+        throw Exception('查询诗词失败，状态码: ${response.statusCode}');
+      }
     } catch (e) {
-      print('查询诗词失败: $e');
-      throw Exception('查询诗词失败');
+      print('[ERROR] 查询诗词异常: $e');
+      throw Exception('查询诗词失败: $e');
     }
   }
 
-  // 获取指定朝代的作者数据，支持分页
+  // 获取指定朝代的作者（分页）
   static Future<List<DynastyDetailModel>> getDynastyAuthors(
       String dynasty, int page, int pageSize) async {
+    final url = Uri.parse(
+        '$baseUrl/api/dynasty-authors?dynasty=$dynasty&page=$page&pageSize=$pageSize');
+    print('[DEBUG] 请求朝代作者 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      final offset = (page - 1) * pageSize; // 计算偏移量
-
-      // 从 author 表获取指定朝代的作者数据，支持分页
-      List<Map<String, dynamic>> authorsResult = await db.rawQuery(
-        'SELECT * FROM author WHERE Dynasty = ? LIMIT ? OFFSET ?',
-        [dynasty, pageSize, offset],
-      );
-
-      print('获取到的作者数量: ${authorsResult.length}');
-      print('作者数据详情:');
-      authorsResult.forEach((author) {
-        print(author); // 打印每一位作者的详细信息
-      });
-
-      // 处理作者数据并返回
-      return authorsResult
-          .map((author) => DynastyDetailModel.fromAuthorMap(author))
-          .toList();
+      final response = await http.get(url);
+      print('[DEBUG] 朝代作者响应状态码: ${response.statusCode}');
+      print('[DEBUG] 朝代作者响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 朝代作者解析后数据: $data');
+        return data
+            .map((json) => DynastyDetailModel.fromAuthorMap(json))
+            .toList();
+      } else {
+        throw Exception('获取朝代作者数据失败，状态码: ${response.statusCode}');
+      }
     } catch (e) {
-      print('获取朝代作者数据失败: $e');
-      throw Exception('获取朝代作者数据失败');
+      print('[ERROR] 获取朝代作者数据异常: $e');
+      throw Exception('获取朝代作者数据失败: $e');
     }
   }
 
-// 获取指定朝代的作品数据，支持分页
+  // 获取指定朝代的诗词（分页）
   static Future<List<DynastyDetailModel>> getDynastyPoems(
       String dynasty, int page, int pageSize) async {
+    final url = Uri.parse(
+        '$baseUrl/api/dynasty-poems?dynasty=$dynasty&page=$page&pageSize=$pageSize');
+    print('[DEBUG] 请求朝代诗词 URL: $url');
     try {
-      final db = await initDb(); // 初始化数据库
-      final offset = (page - 1) * pageSize; // 计算偏移量
-
-      // 从 poem 表获取指定朝代的作品数据，支持分页
-      List<Map<String, dynamic>> poemsResult = await db.rawQuery(
-        'SELECT * FROM poem WHERE Dynasty = ? LIMIT ? OFFSET ?',
-        [dynasty, pageSize, offset],
-      );
-
-      print('获取到的诗词数量: ${poemsResult.length}');
-      print('诗词数据详情:');
-      poemsResult.forEach((poem) {
-        print(poem); // 打印每一首诗词的详细信息
-      });
-
-      // 处理诗词数据并返回
-      return poemsResult
-          .map((poem) => DynastyDetailModel.fromPoemMap(poem))
-          .toList();
+      final response = await http.get(url);
+      print('[DEBUG] 朝代诗词响应状态码: ${response.statusCode}');
+      print('[DEBUG] 朝代诗词响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 朝代诗词解析后数据: $data');
+        return data
+            .map((json) => DynastyDetailModel.fromPoemMap(json))
+            .toList();
+      } else {
+        throw Exception('获取朝代作品数据失败，状态码: ${response.statusCode}');
+      }
     } catch (e) {
-      print('获取朝代作品数据失败: $e');
-      throw Exception('获取朝代作品数据失败');
+      print('[ERROR] 获取朝代诗词异常: $e');
+      throw Exception('获取朝代作品数据失败: $e');
+    }
+  }
+
+  // 获取随机作品集
+  static Future<List<CollectionModel>> getRandomCollections(int limit) async {
+    final url = Uri.parse('$baseUrl/api/random-collections?count=$limit');
+    print('[DEBUG] 请求随机作品集 URL: $url');
+    try {
+      final response = await http.get(url);
+      print('[DEBUG] 随机作品集响应状态码: ${response.statusCode}');
+      print('[DEBUG] 随机作品集响应内容: ${response.body}');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body)['data'] as List;
+        print('[DEBUG] 随机作品集解析后数据: $data');
+        return data.map((json) => CollectionModel.fromMap(json)).toList();
+      } else {
+        throw Exception('获取随机作品集失败，状态码: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('[ERROR] 获取随机作品集异常: $e');
+      throw Exception('获取随机作品集失败: $e');
     }
   }
 }

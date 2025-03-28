@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/db_service.dart';
 import '../models/quote_model.dart';
 import 'dart:math';
@@ -27,7 +28,6 @@ class _MarqueeQuotePageState extends State<MarqueeQuotePage>
   @override
   void initState() {
     super.initState();
-    _loadQuotes();
 
     // 初始化Logo动画
     _logoController = AnimationController(
@@ -42,72 +42,84 @@ class _MarqueeQuotePageState extends State<MarqueeQuotePage>
       ),
     );
 
-    // 设置Logo动画在初始文字动画的第4.5秒开始
-    Future.delayed(Duration(milliseconds: 3000), () {
+    // 设置Logo动画在初始文字动画的第2秒开始
+    Future.delayed(Duration(milliseconds: 2000), () {
       if (mounted) {
         _logoController.forward();
-      }
-    });
-
-    // 设置在动画总时长后导航到QuoteDisplayPage
-    Future.delayed(Duration(milliseconds: 5000), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            transitionDuration: Duration(milliseconds: 1000), // 1秒过渡
-            pageBuilder: (context, animation, secondaryAnimation) => MainPage(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              // Incoming page动画：缩放和渐显
-              final scaleAnimation =
-                  Tween<double>(begin: 0.8, end: 1.0).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOut,
-                ),
-              );
-
-              final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-                CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOut,
-                ),
-              );
-
-              return FadeTransition(
-                opacity: fadeAnimation,
-                child: ScaleTransition(
-                  scale: scaleAnimation,
-                  child: child,
-                ),
-              );
-            },
-          ),
-        );
+        _loadQuotes();
       }
     });
   }
 
   Future<void> _loadQuotes() async {
+    bool success = false;
+
     try {
       // 获取100组数据
       List<QuoteModel> quotes = await DbService.getRandomSentence(_totalQuotes);
       setState(() {
         _quotes = quotes;
-        _isLoading = false;
       });
+      success = true;
 
       // 初始化移动文字，标记为初始文字
       _initializeMovingTexts();
+
+      // 设置在动画总时长后导航到QuoteDisplayPage
+      Future.delayed(Duration(milliseconds: 5000), () {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              transitionDuration: Duration(milliseconds: 1000), // 1秒过渡
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  MainPage(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                // Incoming page动画：缩放和渐显
+                final scaleAnimation =
+                    Tween<double>(begin: 0.8, end: 1.0).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOut,
+                  ),
+                );
+
+                final fadeAnimation =
+                    Tween<double>(begin: 0.0, end: 1.0).animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOut,
+                  ),
+                );
+
+                return FadeTransition(
+                  opacity: fadeAnimation,
+                  child: ScaleTransition(
+                    scale: scaleAnimation,
+                    child: child,
+                  ),
+                );
+              },
+            ),
+          );
+        }
+      });
     } catch (e) {
       print('获取名句失败: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('加载数据失败，请重试！')),
       );
+    } finally {
       setState(() {
         _isLoading = false;
       });
+      if (!success && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => MainPage()),
+        );
+      }
     }
   }
 
@@ -255,43 +267,49 @@ class _MarqueeQuotePageState extends State<MarqueeQuotePage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          if (_isLoading)
-            Center(child: CircularProgressIndicator())
-          else
-            ..._movingTexts
-                .map((movingText) => movingText.build(context))
-                .toList(),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              if (_isLoading)
+                Center(child: CircularProgressIndicator())
+              else
+                ..._movingTexts
+                    .map((movingText) => movingText.build(context))
+                    .toList(),
 
-          // Logo
-          Align(
-            alignment: Alignment.center,
-            child: FadeTransition(
-              opacity: _logoOpacityAnimation,
-              child: Hero(
-                tag: 'logoHero',
-                flightShuttleBuilder: (flightContext, animation,
-                    flightDirection, fromHeroContext, toHeroContext) {
-                  return AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: 3.0 * (1 - animation.value), // 缩小比例
-                        child: Opacity(
-                          opacity: 1.0 - animation.value, // 渐隐
-                          child: LogoWidget(),
-                        ),
+              // Logo
+              Align(
+                alignment: Alignment.center,
+                child: FadeTransition(
+                  opacity: _logoOpacityAnimation,
+                  child: Hero(
+                    tag: 'logoHero',
+                    flightShuttleBuilder: (flightContext, animation,
+                        flightDirection, fromHeroContext, toHeroContext) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: 3.0 * (1 - animation.value), // 缩小比例
+                            child: Opacity(
+                              opacity: 1.0 - animation.value, // 渐隐
+                              child: LogoWidget(),
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-                child: LogoWidget(),
+                    child: LogoWidget(),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

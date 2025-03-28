@@ -69,3 +69,8 @@ ios/Flutter/Release.xcconfig
 /macos
 /android
 /linux
+/windows
+/web
+*.sql
+*.py
+*.csv

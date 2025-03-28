@@ -1,5 +1,3 @@
-// lib/pages/search/collection1_tab_content.dart
-
 import 'package:flutter/material.dart';
 import '../../models/search/GlobalSearchResult.dart';
 import '../../models/search/PoemData.dart';
@@ -137,9 +135,7 @@ class _Collection1TabContentState extends State<Collection1TabContent> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PoemDetailPage(
-                    poemDetail: poemDetail,
-                  ),
+                  builder: (context) => PoemDetailPage(id: poemDetail.id),
                 ),
               );
             } catch (e) {

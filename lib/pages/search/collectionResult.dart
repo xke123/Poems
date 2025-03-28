@@ -139,7 +139,7 @@ class _CollectionResultPageState extends State<CollectionResultPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PoemDetailPage(poemDetail: poem),
+                      builder: (context) => PoemDetailPage(id: poem.id),
                     ),
                   );
                 },

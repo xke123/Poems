@@ -91,7 +91,7 @@ class _QuoteCardState extends State<QuoteCard>
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => PoemDetailPage(poemDetail: poemDetail),
+          builder: (context) => PoemDetailPage(id: poemDetail.id),
         ),
       );
     } catch (e) {
@@ -139,8 +139,15 @@ class _QuoteCardState extends State<QuoteCard>
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: widget.isTop
-          ? () => _fetchPoetryDetails(context, widget.quote.id)
-          : null, // 只有顶层卡片响应点击事件
+          ? () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PoemDetailPage(id: widget.quote.id),
+                ),
+              );
+            }
+          : null,
       onPanUpdate: widget.isTop ? _onPanUpdate : null,
       onPanEnd: widget.isTop ? _onPanEnd : null,
       child: Transform.translate(
@@ -216,6 +223,7 @@ class _QuoteCardState extends State<QuoteCard>
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: formatContent(widget.quote.content)
                                   .split('\n')
+                                  .reversed
                                   .map((line) {
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(

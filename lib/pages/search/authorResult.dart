@@ -373,7 +373,7 @@ class _AuthorResultPageState extends State<AuthorResultPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              PoemDetailPage(poemDetail: poemDetail),
+                              PoemDetailPage(id: poemDetail.id),
                         ),
                       );
                     } catch (e) {

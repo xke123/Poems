@@ -30,21 +30,19 @@ class _DynastyDetailPageState extends State<DynastyDetailPage> {
   final ScrollController _authorScrollController = ScrollController();
   final ScrollController _poemScrollController = ScrollController();
 
- @override
-void initState() {
-  super.initState();
-  authors = widget.dynastyDetails
-      .where((detail) => detail.authorId != null)
-      .toList();
-  poems = widget.dynastyDetails
-      .where((detail) => detail.poemId != null)
-      .toList();
+  @override
+  void initState() {
+    super.initState();
+    authors = widget.dynastyDetails
+        .where((detail) => detail.authorId != null)
+        .toList();
+    poems =
+        widget.dynastyDetails.where((detail) => detail.poemId != null).toList();
 
-  // 监听滚动事件
-  _authorScrollController.addListener(_loadMoreAuthors);
-  _poemScrollController.addListener(_loadMorePoems);
-}
-
+    // 监听滚动事件
+    _authorScrollController.addListener(_loadMoreAuthors);
+    _poemScrollController.addListener(_loadMorePoems);
+  }
 
   @override
   void dispose() {
@@ -53,70 +51,70 @@ void initState() {
     super.dispose();
   }
 
- Future<void> _loadMoreAuthors() async {
-  if (_authorScrollController.position.pixels ==
-      _authorScrollController.position.maxScrollExtent) {
-    if (!isLoadingAuthors) {
-      setState(() {
-        isLoadingAuthors = true;
-      });
-
-      try {
-        // 调用单独获取作者数据的方法
-        List<DynastyDetailModel> newAuthors =
-            await DbService.getDynastyAuthors(widget.dynasty, ++authorPage, 30);
-
-        print('加载到的新的作者数据: ${newAuthors.length} 条');
-        newAuthors.forEach((author) {
-          print(author); // 打印每一个新获取的作者数据
-        });
-
+  Future<void> _loadMoreAuthors() async {
+    if (_authorScrollController.position.pixels ==
+        _authorScrollController.position.maxScrollExtent) {
+      if (!isLoadingAuthors) {
         setState(() {
-          authors.addAll(newAuthors);
-          isLoadingAuthors = false;
+          isLoadingAuthors = true;
         });
-      } catch (e) {
-        print('加载作者失败: $e');
-        setState(() {
-          isLoadingAuthors = false;
-        });
+
+        try {
+          // 调用单独获取作者数据的方法
+          List<DynastyDetailModel> newAuthors =
+              await DbService.getDynastyAuthors(
+                  widget.dynasty, ++authorPage, 30);
+
+          print('加载到的新的作者数据: ${newAuthors.length} 条');
+          newAuthors.forEach((author) {
+            print(author); // 打印每一个新获取的作者数据
+          });
+
+          setState(() {
+            authors.addAll(newAuthors);
+            isLoadingAuthors = false;
+          });
+        } catch (e) {
+          print('加载作者失败: $e');
+          setState(() {
+            isLoadingAuthors = false;
+          });
+        }
       }
     }
   }
-}
 
-Future<void> _loadMorePoems() async {
-  if (_poemScrollController.position.pixels ==
-      _poemScrollController.position.maxScrollExtent) {
-    if (!isLoadingPoems) {
-      setState(() {
-        isLoadingPoems = true;
-      });
-
-      try {
-        // 调用单独获取作品数据的方法
-        List<DynastyDetailModel> newPoems =
-            await DbService.getDynastyPoems(widget.dynasty, ++poemPage, 30);
-
-        print('加载到的新的诗词数据: ${newPoems.length} 条');
-        newPoems.forEach((poem) {
-          print(poem); // 打印每一个新获取的诗词数据
-        });
-
+  Future<void> _loadMorePoems() async {
+    if (_poemScrollController.position.pixels ==
+        _poemScrollController.position.maxScrollExtent) {
+      if (!isLoadingPoems) {
         setState(() {
-          poems.addAll(newPoems);
-          isLoadingPoems = false;
+          isLoadingPoems = true;
         });
-      } catch (e) {
-        print('加载作品失败: $e');
-        setState(() {
-          isLoadingPoems = false;
-        });
+
+        try {
+          // 调用单独获取作品数据的方法
+          List<DynastyDetailModel> newPoems =
+              await DbService.getDynastyPoems(widget.dynasty, ++poemPage, 30);
+
+          print('加载到的新的诗词数据: ${newPoems.length} 条');
+          newPoems.forEach((poem) {
+            print(poem); // 打印每一个新获取的诗词数据
+          });
+
+          setState(() {
+            poems.addAll(newPoems);
+            isLoadingPoems = false;
+          });
+        } catch (e) {
+          print('加载作品失败: $e');
+          setState(() {
+            isLoadingPoems = false;
+          });
+        }
       }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -308,8 +306,7 @@ Future<void> _loadMorePoems() async {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            PoemDetailPage(poemDetail: poemDetail),
+                        builder: (context) => PoemDetailPage(id: poemDetail.id),
                       ),
                     );
                   } catch (e) {

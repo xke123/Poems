@@ -1,13 +1,44 @@
 import 'package:flutter/material.dart';
 import '../../models/poemdetailmodel.dart';
+import '../../services/db_service.dart';
 import 'detail_widget.dart';
 
-class PoemDetailPage extends StatelessWidget {
-  final PoemDetailModel poemDetail; // 接收PoemDetailModel数据
+class PoemDetailPage extends StatefulWidget {
+  final String id;
 
-  PoemDetailPage({required this.poemDetail});
+  const PoemDetailPage({Key? key, required this.id}) : super(key: key);
 
-  // 检查字段是否为null或空字符串
+  @override
+  _PoemDetailPageState createState() => _PoemDetailPageState();
+}
+
+class _PoemDetailPageState extends State<PoemDetailPage> {
+  PoemDetailModel? _poemDetail;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPoem();
+  }
+
+  Future<void> _loadPoem() async {
+    try {
+      final data = await DbService.getQuoteById(widget.id);
+      setState(() {
+        _poemDetail = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('加载失败，请返回重试')),
+        );
+        Navigator.pop(context);
+      }
+    }
+  }
+
   bool isValidField(String? field) {
     return field != null && field.isNotEmpty && field != 'None';
   }
@@ -16,40 +47,34 @@ class PoemDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(poemDetail.title), // 使用诗词标题作为标题
+        title: Text(_poemDetail?.title ?? '加载中...'),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 作者和朝代
-            buildField(
-                context, '作者', '${poemDetail.author} (${poemDetail.dynasty})'),
-
-            // 诗词内容
-            if (isValidField(poemDetail.content))
-              buildField(context, '内容', poemDetail.content),
-
-            // 注释
-            if (isValidField(poemDetail.annotation))
-              buildField(context, '注释', poemDetail.annotation!),
-
-            // 译文
-            if (isValidField(poemDetail.translation))
-              buildField(context, '译文', poemDetail.translation!),
-
-            // 简介
-            if (isValidField(poemDetail.intro))
-              buildField(context, '简介', poemDetail.intro!),
-
-            // 评论
-            if (isValidField(poemDetail.comment))
-              buildField(context, '评论', poemDetail.comment!),
-          ],
-        ),
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  buildField(
+                    context,
+                    '作者',
+                    '${_poemDetail!.author} (${_poemDetail!.dynasty})',
+                  ),
+                  if (isValidField(_poemDetail!.content))
+                    buildField(context, '内容', _poemDetail!.content),
+                  if (isValidField(_poemDetail!.annotation))
+                    buildField(context, '注释', _poemDetail!.annotation!),
+                  if (isValidField(_poemDetail!.translation))
+                    buildField(context, '译文', _poemDetail!.translation!),
+                  if (isValidField(_poemDetail!.intro))
+                    buildField(context, '简介', _poemDetail!.intro!),
+                  if (isValidField(_poemDetail!.comment))
+                    buildField(context, '评论', _poemDetail!.comment!),
+                ],
+              ),
+            ),
     );
   }
 }

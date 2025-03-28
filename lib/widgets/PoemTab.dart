@@ -138,9 +138,7 @@ class _PoemTabContentState extends State<PoemTabContent> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => PoemDetailPage(
-                    poemDetail: poemDetail,
-                  ),
+                  builder: (context) => PoemDetailPage(id: poemDetail.id),
                 ),
               );
             } catch (e) {

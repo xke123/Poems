@@ -132,9 +132,8 @@ class _PoemResultPageState extends State<PoemResultPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PoemDetailPage(
-                            poemDetail: poemDetail,
-                          ),
+                          builder: (context) =>
+                              PoemDetailPage(id: poemDetail.id),
                         ),
                       );
                     } catch (e) {
