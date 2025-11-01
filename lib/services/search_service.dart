@@ -11,19 +11,20 @@ import '../models/author_model.dart';
 
 class SearchService {
   // 请根据实际情况修改后端服务地址
-  static const String baseUrl = 'https://api.logofmy.life';
+  static const String baseUrl = 'https://api.grayhua.com';
 
   /// 全局搜索接口，根据指定类型查询（对应后端 /api/search/global 接口）
   static Future<List<GlobalSearchResult>> searchGlobalByType({
     required String query,
     required String dynasty,
     required String
-        type, // 可选 'poem'、'sentence'、'famous_sentence'、'collection1' 等
+    type, // 可选 'poem'、'sentence'、'famous_sentence'、'collection1' 等
     int limit = 30,
     int offset = 0,
   }) async {
     final url = Uri.parse(
-        '$baseUrl/api/search/global?query=$query&dynasty=$dynasty&type=$type&limit=$limit&offset=$offset');
+      '$baseUrl/api/search/global?query=$query&dynasty=$dynasty&type=$type&limit=$limit&offset=$offset',
+    );
     print('[DEBUG] 请求 URL: $url');
     try {
       final response = await http.get(url);
@@ -34,42 +35,58 @@ class SearchService {
         final List<dynamic> resultsJson = jsonData['results'];
         List<GlobalSearchResult> results = [];
         if (type == 'poem') {
-          results = resultsJson
-              .map((json) => GlobalSearchResult.poem(PoemData.fromMap(json)))
-              .toList();
+          results =
+              resultsJson
+                  .map(
+                    (json) => GlobalSearchResult.poem(PoemData.fromMap(json)),
+                  )
+                  .toList();
         } else if (type == 'sentence') {
-          results = resultsJson
-              .map((json) => GlobalSearchResult.sentence(PoemData.fromMap(json)))
-              .toList();
+          results =
+              resultsJson
+                  .map(
+                    (json) =>
+                        GlobalSearchResult.sentence(PoemData.fromMap(json)),
+                  )
+                  .toList();
         } else if (type == 'famous_sentence') {
-          results = resultsJson
-              .map((json) => GlobalSearchResult.famousSentence(
-                    SentenceData.fromMap(json),
-                  ))
-              .toList();
+          results =
+              resultsJson
+                  .map(
+                    (json) => GlobalSearchResult.famousSentence(
+                      SentenceData.fromMap(json),
+                    ),
+                  )
+                  .toList();
         } else if (type == 'collection1') {
-          results = resultsJson
-              .map((json) =>
-                  GlobalSearchResult.collection1(PoemData.fromMap(json)))
-              .toList();
+          results =
+              resultsJson
+                  .map(
+                    (json) =>
+                        GlobalSearchResult.collection1(PoemData.fromMap(json)),
+                  )
+                  .toList();
         } else {
           // 默认按全局搜索处理，尝试自动判断类型（这里仅作简单处理）
-          results = resultsJson.map((json) {
-            if (json.containsKey('title') && json.containsKey('kind')) {
-              return GlobalSearchResult.collection2(
-                  CollectionData.fromMap(json));
-            } else if (json.containsKey('Name')) {
-              return GlobalSearchResult.author(AuthorData.fromMap(json));
-            } else if (json.containsKey('Title')) {
-              return GlobalSearchResult.poem(PoemData.fromMap(json));
-            } else if (json.containsKey('Content')) {
-              return GlobalSearchResult.sentence(PoemData.fromMap(json));
-            } else if (json.containsKey('content')) {
-              return GlobalSearchResult.famousSentence(
-                  SentenceData.fromMap(json));
-            }
-            return GlobalSearchResult.poem(PoemData.fromMap(json));
-          }).toList();
+          results =
+              resultsJson.map((json) {
+                if (json.containsKey('title') && json.containsKey('kind')) {
+                  return GlobalSearchResult.collection2(
+                    CollectionData.fromMap(json),
+                  );
+                } else if (json.containsKey('Name')) {
+                  return GlobalSearchResult.author(AuthorData.fromMap(json));
+                } else if (json.containsKey('Title')) {
+                  return GlobalSearchResult.poem(PoemData.fromMap(json));
+                } else if (json.containsKey('Content')) {
+                  return GlobalSearchResult.sentence(PoemData.fromMap(json));
+                } else if (json.containsKey('content')) {
+                  return GlobalSearchResult.famousSentence(
+                    SentenceData.fromMap(json),
+                  );
+                }
+                return GlobalSearchResult.poem(PoemData.fromMap(json));
+              }).toList();
         }
         return results;
       } else {
@@ -89,7 +106,8 @@ class SearchService {
     int offset = 0,
   }) async {
     final url = Uri.parse(
-        '$baseUrl/api/search/collections?query=$query&dynasty=$dynasty&limit=$limit&offset=$offset');
+      '$baseUrl/api/search/collections?query=$query&dynasty=$dynasty&limit=$limit&offset=$offset',
+    );
     print('[DEBUG] 请求作品集 URL: $url');
     try {
       final response = await http.get(url);
@@ -98,10 +116,14 @@ class SearchService {
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         final List<dynamic> resultsJson = jsonData['results'];
-        List<GlobalSearchResult> results = resultsJson
-            .map((json) =>
-                GlobalSearchResult.collection2(CollectionData.fromMap(json)))
-            .toList();
+        List<GlobalSearchResult> results =
+            resultsJson
+                .map(
+                  (json) => GlobalSearchResult.collection2(
+                    CollectionData.fromMap(json),
+                  ),
+                )
+                .toList();
         return results;
       } else {
         throw Exception('API error: ${response.statusCode}');
@@ -120,7 +142,8 @@ class SearchService {
     int offset = 0,
   }) async {
     final url = Uri.parse(
-        '$baseUrl/api/search/authors?query=$query&dynasty=$dynasty&limit=$limit&offset=$offset');
+      '$baseUrl/api/search/authors?query=$query&dynasty=$dynasty&limit=$limit&offset=$offset',
+    );
     print('[DEBUG] 请求作者 URL: $url');
     try {
       final response = await http.get(url);
@@ -129,9 +152,12 @@ class SearchService {
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         final List<dynamic> resultsJson = jsonData['results'];
-        List<GlobalSearchResult> results = resultsJson
-            .map((json) => GlobalSearchResult.author(AuthorData.fromMap(json)))
-            .toList();
+        List<GlobalSearchResult> results =
+            resultsJson
+                .map(
+                  (json) => GlobalSearchResult.author(AuthorData.fromMap(json)),
+                )
+                .toList();
         return results;
       } else {
         throw Exception('API error: ${response.statusCode}');
@@ -150,7 +176,8 @@ class SearchService {
     int offset = 0,
   }) async {
     final url = Uri.parse(
-        '$baseUrl/api/search/poems?query=$query&dynasty=$dynasty&limit=$limit&offset=$offset');
+      '$baseUrl/api/search/poems?query=$query&dynasty=$dynasty&limit=$limit&offset=$offset',
+    );
     print('[DEBUG] 请求作品 URL: $url');
     try {
       final response = await http.get(url);
@@ -181,7 +208,8 @@ class SearchService {
   }) async {
     // 统一使用 /api/search/global 接口，通过 type 参数传递 option
     final url = Uri.parse(
-        '$baseUrl/api/search/global?query=$query&dynasty=$dynasty&type=$option&limit=$limit&offset=$offset');
+      '$baseUrl/api/search/global?query=$query&dynasty=$dynasty&type=$option&limit=$limit&offset=$offset',
+    );
     print('[DEBUG] 全局搜索（option）请求 URL: $url');
     try {
       final response = await http.get(url);
@@ -193,7 +221,9 @@ class SearchService {
         // 根据 option 返回对应类型
         if (option == '作者') {
           return resultsJson
-              .map((json) => GlobalSearchResult.author(AuthorData.fromMap(json)))
+              .map(
+                (json) => GlobalSearchResult.author(AuthorData.fromMap(json)),
+              )
               .toList();
         } else if (option == '作品名') {
           return resultsJson

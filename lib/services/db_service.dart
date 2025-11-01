@@ -10,12 +10,13 @@ import 'package:poems/models/dynastydetailmodel.dart';
 
 class DbService {
   // 设置后端 API 基础 URL（请确保此 URL 正确无误）
-  static const String baseUrl = 'https://api.logofmy.life';
+  static const String baseUrl = 'https://api.grayhua.com';
 
   // 注：此方法仅用于兼容 search_service.dart，后续可统一调整
   static Future<dynamic> initDb() async {
     throw UnimplementedError(
-        'initDb 暂未实现 API 版本，请调整 search_service.dart 或实现此方法');
+      'initDb 暂未实现 API 版本，请调整 search_service.dart 或实现此方法',
+    );
   }
 
   // 获取随机句子示例
@@ -40,8 +41,10 @@ class DbService {
   }
 
   // 获取前30个作者
-  static Future<List<AuthorModel>> getAuthors(
-      {int limit = 30, int offset = 0}) async {
+  static Future<List<AuthorModel>> getAuthors({
+    int limit = 30,
+    int offset = 0,
+  }) async {
     final url = Uri.parse('$baseUrl/api/authors?limit=$limit&offset=$offset');
     print('[DEBUG] 请求作者列表 URL: $url');
     try {
@@ -83,10 +86,13 @@ class DbService {
   }
 
   // 获取30个作品集
-  static Future<List<CollectionModel>> getCollections(
-      {int limit = 30, int offset = 0}) async {
-    final url =
-        Uri.parse('$baseUrl/api/collections?limit=$limit&offset=$offset');
+  static Future<List<CollectionModel>> getCollections({
+    int limit = 30,
+    int offset = 0,
+  }) async {
+    final url = Uri.parse(
+      '$baseUrl/api/collections?limit=$limit&offset=$offset',
+    );
     print('[DEBUG] 请求作品集 URL: $url');
     try {
       final response = await http.get(url);
@@ -149,9 +155,13 @@ class DbService {
 
   // 获取指定朝代数据（诗词和作者）
   static Future<List<DynastyDetailModel>> getDynastyData(
-      String dynasty, int page, int pageSize) async {
+    String dynasty,
+    int page,
+    int pageSize,
+  ) async {
     final url = Uri.parse(
-        '$baseUrl/api/dynasty-data?dynasty=$dynasty&page=$page&pageSize=$pageSize');
+      '$baseUrl/api/dynasty-data?dynasty=$dynasty&page=$page&pageSize=$pageSize',
+    );
     print('[DEBUG] 请求朝代数据 URL: $url');
     try {
       final response = await http.get(url);
@@ -163,9 +173,10 @@ class DbService {
         List<dynamic> authors = jsonResponse['authors'];
         print('[DEBUG] 诗词数据: $poems');
         print('[DEBUG] 作者数据: $authors');
-        List<dynamic> combined = []
-          ..addAll(poems)
-          ..addAll(authors);
+        List<dynamic> combined =
+            []
+              ..addAll(poems)
+              ..addAll(authors);
         return combined.map((e) => DynastyDetailModel.fromPoemMap(e)).toList();
       } else {
         throw Exception('获取朝代数据失败，状态码: ${response.statusCode}');
@@ -178,9 +189,11 @@ class DbService {
 
   // 根据作品集标题查询诗词
   static Future<List<PoemDetailModel>> getPoemsByCollectionTitle(
-      String collectionTitle) async {
+    String collectionTitle,
+  ) async {
     final url = Uri.parse(
-        '$baseUrl/api/poems-by-collection?collectionTitle=${Uri.encodeComponent(collectionTitle)}');
+      '$baseUrl/api/poems-by-collection?collectionTitle=${Uri.encodeComponent(collectionTitle)}',
+    );
     print('[DEBUG] 请求作品集标题查询 URL: $url');
     try {
       final response = await http.get(url);
@@ -201,9 +214,13 @@ class DbService {
 
   // 获取指定朝代的作者（分页）
   static Future<List<DynastyDetailModel>> getDynastyAuthors(
-      String dynasty, int page, int pageSize) async {
+    String dynasty,
+    int page,
+    int pageSize,
+  ) async {
     final url = Uri.parse(
-        '$baseUrl/api/dynasty-authors?dynasty=$dynasty&page=$page&pageSize=$pageSize');
+      '$baseUrl/api/dynasty-authors?dynasty=$dynasty&page=$page&pageSize=$pageSize',
+    );
     print('[DEBUG] 请求朝代作者 URL: $url');
     try {
       final response = await http.get(url);
@@ -226,9 +243,13 @@ class DbService {
 
   // 获取指定朝代的诗词（分页）
   static Future<List<DynastyDetailModel>> getDynastyPoems(
-      String dynasty, int page, int pageSize) async {
+    String dynasty,
+    int page,
+    int pageSize,
+  ) async {
     final url = Uri.parse(
-        '$baseUrl/api/dynasty-poems?dynasty=$dynasty&page=$page&pageSize=$pageSize');
+      '$baseUrl/api/dynasty-poems?dynasty=$dynasty&page=$page&pageSize=$pageSize',
+    );
     print('[DEBUG] 请求朝代诗词 URL: $url');
     try {
       final response = await http.get(url);
